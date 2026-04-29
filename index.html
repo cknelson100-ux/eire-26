@@ -397,7 +397,7 @@
       <div class="form-row">
         <label>Anthropic API key</label>
         <div class="key-input-wrap">
-          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
           <button type="button" class="key-show-btn" data-target="apiKeyInput" aria-label="Show/hide">👁</button>
         </div>
       </div>
@@ -406,13 +406,13 @@
         <div class="form-row" style="margin-top: 10px;">
           <label>GitHub Personal Access Token</label>
           <div class="key-input-wrap">
-            <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off" spellcheck="false">
+            <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
             <button type="button" class="key-show-btn" data-target="gistTokenInput" aria-label="Show/hide">👁</button>
           </div>
         </div>
         <div class="form-row">
           <label>Gist ID <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(leave blank to create a new one — share the ID with Megan)</span></label>
-          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off" spellcheck="false">
+          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
         </div>
         <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
           <button class="btn btn-primary" id="gistConnectBtn">Connect & sync</button>
@@ -1571,10 +1571,27 @@ document.querySelectorAll('.key-show-btn').forEach(btn => {
 
 // Verify GitHub token alone (without Gist ID) by hitting /user
 document.getElementById('gistVerifyBtn').addEventListener('click', async () => {
-  const token = document.getElementById('gistTokenInput').value.trim();
+  const tokenRaw = document.getElementById('gistTokenInput').value;
+  const token = tokenRaw.trim();
   if (!token) { toast('Paste a token first.'); return; }
+  // Diagnostic info
+  const len = token.length;
+  const preview = token.slice(0, 6);
+  const trail = token.slice(-3);
+  const hadWhitespace = tokenRaw.length !== token.length;
+  // Detect unexpected characters (PATs are ASCII alphanumeric + underscore)
+  const badChars = token.match(/[^A-Za-z0-9_]/g);
+  console.log(`Token diagnostic: len=${len}, preview="${preview}…${trail}", whitespace=${hadWhitespace}, badChars=${badChars}`);
   if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-    toast(`Doesn't look like a GitHub token (should start with ghp_ or github_pat_). You may have pasted the wrong key.`);
+    alert(`Token in field starts with "${preview}" (${len} chars). Should start with ghp_ or github_pat_.\n\nIf you see uppercase G, iOS auto-capitalized it — type the g lowercase, or paste from a notes app.\n\nIf it's something completely different (like sk-ant-...), you have the wrong key in this field.`);
+    return;
+  }
+  if (badChars) {
+    alert(`Token contains unexpected characters: ${badChars.join(', ')}\n\nThis usually means iOS smart punctuation replaced something. Try pasting the token from a notes app instead of typing.`);
+    return;
+  }
+  if (hadWhitespace) {
+    alert(`Token has leading/trailing whitespace. Tap the field, select all, delete, and re-paste cleanly.`);
     return;
   }
   const btn = document.getElementById('gistVerifyBtn');
@@ -1587,14 +1604,14 @@ document.getElementById('gistVerifyBtn').addEventListener('click', async () => {
     });
     if (res.ok) {
       const u = await res.json();
-      toast(`✓ Token works — logged in as ${u.login}`);
+      alert(`✓ Token works — logged in as ${u.login}.\n\nNow paste the same Gist ID and tap Connect & sync.`);
     } else if (res.status === 401) {
-      toast('✗ Bad credentials. Token has whitespace, was truncated, or expired. Re-paste or regenerate.');
+      alert(`✗ GitHub rejected the token (Bad credentials).\n\nField has ${len} chars starting with "${preview}". Compare this to what your token should look like at github.com/settings/tokens.\n\nIf they match exactly: the token may be expired or the wrong account. Regenerate.`);
     } else {
-      toast(`✗ ${res.status} ${res.statusText}`);
+      alert(`✗ ${res.status} ${res.statusText}`);
     }
   } catch (e) {
-    toast('Network error: ' + e.message);
+    alert('Network error: ' + e.message + '\n\nCheck your phone has internet, or that you opened the app over HTTPS (not HTTP).');
   } finally {
     btn.disabled = false; btn.textContent = orig;
   }
