@@ -743,14 +743,15 @@ function mergeRemote(remote) {
 async function gistApi(method, path, body) {
   const token = getGistToken();
   if (!token) throw new Error('No GitHub token');
-  const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+  const headers = { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' };
   if (body) headers['Content-Type'] = 'application/json';
   const res = await fetch('https://api.github.com' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
-    if (res.status === 401) throw new Error('Bad credentials. Token is invalid, has whitespace, or is for a different account. Try Verify button or regenerate at github.com/settings/tokens.');
+    if (res.status === 401) throw new Error('GitHub 401: ' + txt.slice(0, 200));
     if (res.status === 404 && path.startsWith('/gists/')) throw new Error('Gist not found. Check the Gist ID, or create a new one (leave Gist ID empty + Connect).');
-    throw new Error(`Gist ${method} ${res.status}: ${txt.slice(0, 140)}`);
+    if (res.status === 403) throw new Error('GitHub 403: ' + txt.slice(0, 200) + ' — token might be missing the gist scope.');
+    throw new Error(`Gist ${method} ${res.status}: ${txt.slice(0, 200)}`);
   }
   return res.json();
 }
@@ -1600,15 +1601,17 @@ document.getElementById('gistVerifyBtn').addEventListener('click', async () => {
   btn.textContent = 'Verifying…';
   try {
     const res = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
     });
     if (res.ok) {
       const u = await res.json();
       alert(`✓ Token works — logged in as ${u.login}.\n\nNow paste the same Gist ID and tap Connect & sync.`);
     } else if (res.status === 401) {
-      alert(`✗ GitHub rejected the token (Bad credentials).\n\nField has ${len} chars starting with "${preview}". Compare this to what your token should look like at github.com/settings/tokens.\n\nIf they match exactly: the token may be expired or the wrong account. Regenerate.`);
+      const errBody = await res.text().catch(() => '');
+      alert(`✗ GitHub rejected the token (401).\n\nField has ${len} chars starting with "${preview}".\n\nGitHub said: ${errBody.slice(0, 200)}\n\nMost likely: token is wrong, expired, or for a different account. Regenerate at github.com/settings/tokens.`);
     } else {
-      alert(`✗ ${res.status} ${res.statusText}`);
+      const errBody = await res.text().catch(() => '');
+      alert(`✗ ${res.status} ${res.statusText}\n${errBody.slice(0, 200)}`);
     }
   } catch (e) {
     alert('Network error: ' + e.message + '\n\nCheck your phone has internet, or that you opened the app over HTTPS (not HTTP).');
