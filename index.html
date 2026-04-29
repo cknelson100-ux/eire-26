@@ -229,6 +229,10 @@
   .form-row input, .form-row textarea, .form-row select { border: 1px solid var(--border); background: var(--paper-warm); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 14px; color: var(--ink); transition: border-color 0.15s ease; font-family: inherit; }
   .form-row input:focus, .form-row textarea:focus, .form-row select:focus { outline: none; border-color: var(--moss); background: var(--paper); }
   .form-row textarea { resize: vertical; min-height: 60px; }
+  .key-input-wrap { position: relative; }
+  .key-input-wrap input { width: 100%; padding-right: 42px !important; box-sizing: border-box; }
+  .key-show-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; padding: 8px; font-size: 16px; color: var(--ink-faint); border-radius: 4px; line-height: 1; font-family: inherit; }
+  .key-show-btn:hover { color: var(--ink); background: var(--bg-soft, #f3f0e8); }
   .type-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .type-btn { border: 1px solid var(--border); background: var(--paper-warm); border-radius: 8px; padding: 10px 6px; cursor: pointer; text-align: center; font: inherit; font-size: 11px; color: var(--ink-soft); transition: all 0.15s ease; font-family: inherit; }
   .type-btn:hover { border-color: var(--moss-light); }
@@ -392,20 +396,27 @@
       <p style="font-size: 12px; color: var(--ink-faint); margin-bottom: 18px;">Inside Claude.ai's preview, no key is needed — it just works. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--moss);">Get a key →</a></p>
       <div class="form-row">
         <label>Anthropic API key</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off">
+        <div class="key-input-wrap">
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+          <button type="button" class="key-show-btn" data-target="apiKeyInput" aria-label="Show/hide">👁</button>
+        </div>
       </div>
       <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
         <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>GitHub Gist sync.</strong> Real cross-device sync between you and Megan via a private Gist. Changes propagate within ~30 seconds. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Eire%2026" target="_blank" style="color: var(--moss);">Create a token →</a> (only check the <em>gist</em> scope, give it a long expiration).</p>
         <div class="form-row" style="margin-top: 10px;">
           <label>GitHub Personal Access Token</label>
-          <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off">
+          <div class="key-input-wrap">
+            <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off" spellcheck="false">
+            <button type="button" class="key-show-btn" data-target="gistTokenInput" aria-label="Show/hide">👁</button>
+          </div>
         </div>
         <div class="form-row">
           <label>Gist ID <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(leave blank to create a new one — share the ID with Megan)</span></label>
-          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off">
+          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off" spellcheck="false">
         </div>
         <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
           <button class="btn btn-primary" id="gistConnectBtn">Connect & sync</button>
+          <button class="btn" id="gistVerifyBtn">Verify token</button>
           <button class="btn" id="gistSyncBtn" style="display: none;">Sync now</button>
           <button class="btn" id="gistDisconnectBtn" style="color: var(--berry); display: none;">Disconnect</button>
           <span id="gistStatus" style="font-size: 12px; color: var(--ink-faint); margin-left: auto;"></span>
@@ -673,10 +684,10 @@ let lastSyncAt = null;
 let lastSyncBy = null;
 let lastSyncError = null;
 
-function getGistToken() { return localStorage.getItem('gist-token') || ''; }
-function setGistToken(t) { if (t) localStorage.setItem('gist-token', t); else localStorage.removeItem('gist-token'); }
-function getGistId() { return localStorage.getItem('gist-id') || ''; }
-function setGistId(id) { if (id) localStorage.setItem('gist-id', id); else localStorage.removeItem('gist-id'); }
+function getGistToken() { return (localStorage.getItem('gist-token') || '').trim(); }
+function setGistToken(t) { if (t) localStorage.setItem('gist-token', t.trim()); else localStorage.removeItem('gist-token'); }
+function getGistId() { return (localStorage.getItem('gist-id') || '').trim(); }
+function setGistId(id) { if (id) localStorage.setItem('gist-id', id.trim()); else localStorage.removeItem('gist-id'); }
 function syncEnabled() { return !!(getGistToken() && getGistId()); }
 
 function buildSyncPayload() {
@@ -737,6 +748,8 @@ async function gistApi(method, path, body) {
   const res = await fetch('https://api.github.com' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
+    if (res.status === 401) throw new Error('Bad credentials. Token is invalid, has whitespace, or is for a different account. Try Verify button or regenerate at github.com/settings/tokens.');
+    if (res.status === 404 && path.startsWith('/gists/')) throw new Error('Gist not found. Check the Gist ID, or create a new one (leave Gist ID empty + Connect).');
     throw new Error(`Gist ${method} ${res.status}: ${txt.slice(0, 140)}`);
   }
   return res.json();
@@ -1544,6 +1557,47 @@ document.getElementById('gistDisconnectBtn').addEventListener('click', () => {
   refreshGistButtons();
   updateGistStatus('idle');
   toast('Disconnected.');
+});
+
+// Show/hide eye toggle for password-type inputs
+document.querySelectorAll('.key-show-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    if (target.type === 'password') { target.type = 'text'; btn.textContent = '🙈'; }
+    else { target.type = 'password'; btn.textContent = '👁'; }
+  });
+});
+
+// Verify GitHub token alone (without Gist ID) by hitting /user
+document.getElementById('gistVerifyBtn').addEventListener('click', async () => {
+  const token = document.getElementById('gistTokenInput').value.trim();
+  if (!token) { toast('Paste a token first.'); return; }
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    toast(`Doesn't look like a GitHub token (should start with ghp_ or github_pat_). You may have pasted the wrong key.`);
+    return;
+  }
+  const btn = document.getElementById('gistVerifyBtn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Verifying…';
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if (res.ok) {
+      const u = await res.json();
+      toast(`✓ Token works — logged in as ${u.login}`);
+    } else if (res.status === 401) {
+      toast('✗ Bad credentials. Token has whitespace, was truncated, or expired. Re-paste or regenerate.');
+    } else {
+      toast(`✗ ${res.status} ${res.statusText}`);
+    }
+  } catch (e) {
+    toast('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
 });
 
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
