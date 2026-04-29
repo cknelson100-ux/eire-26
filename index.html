@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Éire '26">
+<meta name="theme-color" content="#3A5A40">
+<link rel="manifest" href='data:application/manifest+json,{"name":"%C3%89ire %2726 %E2%80%94 Connor %26 Megan","short_name":"%C3%89ire %2726","display":"standalone","orientation":"any","background_color":"%23F2EBDB","theme_color":"%233A5A40","start_url":"."}'>
+<title>Ireland — Connor & Megan, May '26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --bg: #F2EBDB; --bg-soft: #EAE0CB; --paper: #FBF6EC; --paper-warm: #F7EEDB;
+    --ink: #1B2A1F; --ink-soft: #4A5D4E; --ink-faint: #7C8A7E;
+    --moss: #3A5A40; --moss-deep: #2D4736; --moss-light: #5A7B60;
+    --amber: #B8860B; --amber-soft: #D4A847; --rust: #A0522D; --berry: #6E2F3A;
+    --border: #D6CCB8; --border-soft: #E5DCC7; --done: #8B9D85;
+    --shadow: 0 1px 0 rgba(27,42,31,0.04), 0 8px 28px -12px rgba(27,42,31,0.18);
+    --shadow-deep: 0 24px 60px -20px rgba(27,42,31,0.32);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  body { background: radial-gradient(ellipse at 20% 10%, rgba(184,134,11,0.06), transparent 50%), radial-gradient(ellipse at 90% 80%, rgba(58,90,64,0.07), transparent 50%), var(--bg); background-attachment: fixed; position: relative; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: 0.45; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); z-index: 0; }
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 36px 32px 96px; padding-top: max(36px, env(safe-area-inset-top)); padding-bottom: max(96px, calc(96px + env(safe-area-inset-bottom))); }
+
+  header.masthead { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; }
+  .brand-row { display: flex; align-items: center; gap: 14px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 14px; }
+  .brand-rule { flex: 1; height: 1px; background: var(--border); max-width: 80px; }
+  .title { font-family: 'Fraunces', serif; font-weight: 300; font-variation-settings: "opsz" 144, "SOFT" 50; font-size: clamp(44px, 5.5vw, 76px); line-height: 0.92; letter-spacing: -0.02em; color: var(--ink); }
+  .title em { font-style: italic; font-weight: 400; color: var(--moss); font-variation-settings: "opsz" 144, "SOFT" 100; }
+  .subtitle { margin-top: 12px; color: var(--ink-soft); font-size: 15px; max-width: 540px; }
+  .meta-stack { display: flex; flex-direction: column; gap: 14px; align-items: flex-end; text-align: right; }
+  .who-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; background: var(--paper); border: 1px solid var(--border); border-radius: 100px; font-size: 13px; cursor: pointer; transition: all 0.18s ease; font-family: inherit; color: var(--ink); }
+  .who-pill:hover { background: var(--paper-warm); border-color: var(--moss-light); }
+  .who-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--moss); color: var(--paper); display: grid; place-items: center; font-family: 'Fraunces', serif; font-weight: 500; font-size: 13px; }
+  .who-avatar.megan { background: var(--berry); }
+  .stats { display: flex; gap: 18px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .stats strong { color: var(--ink); font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; letter-spacing: 0; text-transform: none; margin-right: 4px; }
+
+  .ai-bar { background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 8px 8px 8px 18px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow); margin-bottom: 24px; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+  .ai-bar:focus-within { border-color: var(--moss); box-shadow: 0 0 0 3px rgba(58,90,64,0.1), var(--shadow); }
+  .ai-bar svg.spark { width: 18px; height: 18px; color: var(--amber); flex-shrink: 0; }
+  .ai-input { flex: 1; border: none; background: transparent; outline: none; font: inherit; font-size: 14px; color: var(--ink); padding: 12px 0; min-width: 0; }
+  .ai-input::placeholder { color: var(--ink-faint); font-style: italic; }
+  .ai-btn { border: none; background: var(--moss); color: var(--paper); padding: 10px 16px; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: inherit; }
+  .ai-btn:hover:not(:disabled) { background: var(--moss-deep); }
+  .ai-btn:disabled { opacity: 0.6; cursor: wait; }
+  .ai-btn .spinner { width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .paste-btn { border: 1px solid var(--border); background: var(--paper-warm); color: var(--ink-soft); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; transition: all 0.15s ease; flex-shrink: 0; font-family: inherit; }
+  .paste-btn:hover { border-color: var(--moss); color: var(--moss); background: var(--paper); }
+  .paste-btn svg { width: 16px; height: 16px; }
+
+  .view-tabs { display: flex; gap: 4px; padding: 5px; background: var(--bg-soft); border: 1px solid var(--border-soft); border-radius: 12px; margin-bottom: 24px; width: fit-content; }
+  .vtab { border: none; background: transparent; padding: 8px 18px; border-radius: 8px; font: inherit; font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; }
+  .vtab.active { background: var(--paper); color: var(--ink); box-shadow: var(--shadow); }
+  .vtab:hover:not(.active) { color: var(--ink); }
+  .vtab svg { width: 14px; height: 14px; }
+
+  .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+  .btn { border: 1px solid var(--border); background: var(--paper); color: var(--ink); padding: 9px 16px; border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .btn:hover { border-color: var(--moss); background: var(--paper-warm); }
+  .btn-primary { background: var(--moss); color: var(--paper); border-color: var(--moss); }
+  .btn-primary:hover { background: var(--moss-deep); border-color: var(--moss-deep); }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: var(--paper); border-color: var(--border); }
+  .btn svg { width: 14px; height: 14px; }
+  .filter-group { display: flex; gap: 4px; padding: 4px; background: var(--bg-soft); border-radius: 10px; border: 1px solid var(--border-soft); }
+  .filter-chip { border: none; background: transparent; padding: 6px 12px; border-radius: 6px; font: inherit; font-size: 12px; color: var(--ink-soft); cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+  .filter-chip.active { background: var(--paper); color: var(--ink); box-shadow: var(--shadow); }
+  .filter-chip:hover:not(.active) { color: var(--ink); }
+
+  .day-nav { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; margin-bottom: 28px; padding: 10px; background: var(--paper); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+  @media (max-width: 720px) { .day-nav { grid-template-columns: repeat(5, 1fr); } }
+  .day-tab { border: none; background: transparent; padding: 12px 4px; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.18s ease; position: relative; font-family: inherit; }
+  .day-tab:hover { background: var(--bg-soft); }
+  .day-tab.active { background: var(--moss); color: var(--paper); }
+  .day-tab.active .day-num { color: var(--paper); }
+  .day-tab.active .day-name { color: rgba(251,246,236,0.7); }
+  .day-tab.has-items::after { content: ""; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--amber); }
+  .day-tab.active.has-items::after { background: var(--amber-soft); }
+  .day-name { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 4px; }
+  .day-num { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 400; color: var(--ink); display: block; }
+
+  .day-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border); gap: 16px; }
+  .day-title { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 300; line-height: 1; letter-spacing: -0.01em; font-variation-settings: "opsz" 80; }
+  .day-title em { font-style: italic; color: var(--moss); font-variation-settings: "opsz" 80, "SOFT" 100; }
+  .day-subtitle { color: var(--ink-soft); font-size: 14px; margin-top: 6px; }
+  .day-count { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+
+  .items { display: flex; flex-direction: column; gap: 12px; }
+  .item { background: var(--paper); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: start; transition: all 0.18s ease; position: relative; box-shadow: var(--shadow); }
+  .item:hover { transform: translateY(-1px); box-shadow: 0 1px 0 rgba(27,42,31,0.04), 0 14px 32px -14px rgba(27,42,31,0.22); }
+  .item.done { background: var(--bg-soft); border-color: var(--border-soft); box-shadow: none; }
+  .item.done .item-title { text-decoration: line-through; color: var(--done); }
+  .item.done .item-meta { color: var(--ink-faint); }
+  .item-check { flex-shrink: 0; width: 22px; height: 22px; border: 1.5px solid var(--ink-soft); border-radius: 50%; background: transparent; cursor: pointer; transition: all 0.15s ease; display: grid; place-items: center; margin-top: 2px; }
+  .item-check:hover { border-color: var(--moss); background: var(--paper-warm); }
+  .item-check.checked { background: var(--moss); border-color: var(--moss); }
+  .item-check svg { width: 12px; height: 12px; opacity: 0; transition: opacity 0.15s ease; }
+  .item-check.checked svg { opacity: 1; }
+  .item-body { min-width: 0; }
+  .item-time-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+  .item-time { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; text-transform: none; }
+  .item-type-tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 4px; font-size: 10px; background: var(--bg-soft); color: var(--ink-soft); }
+  .item-type-tag.lodging { background: rgba(58,90,64,0.12); color: var(--moss-deep); }
+  .item-type-tag.food { background: rgba(160,82,45,0.12); color: var(--rust); }
+  .item-type-tag.activity { background: rgba(184,134,11,0.15); color: var(--amber); }
+  .item-type-tag.transport { background: rgba(110,47,58,0.12); color: var(--berry); }
+  .item-type-tag.note { background: rgba(124,138,126,0.15); color: var(--ink-soft); }
+  .item-title { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 6px; font-variation-settings: "opsz" 60; }
+  .item-meta { color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+  .item-detail-row { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 12px; color: var(--ink-soft); }
+  .item-detail { display: inline-flex; align-items: center; gap: 5px; }
+  .item-detail svg { width: 12px; height: 12px; opacity: 0.7; }
+  .item-detail a { color: var(--moss); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .item-detail a:hover { border-color: var(--moss); }
+  .item-credit { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.04em; }
+  .item-credit .who-avatar { width: 16px; height: 16px; font-size: 9px; }
+  .item-photos { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .item-photos img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); transition: transform 0.15s ease; }
+  .item-photos img:hover { transform: scale(1.05); }
+  .item-actions { display: flex; flex-direction: column; gap: 4px; opacity: 0; transition: opacity 0.18s ease; }
+  .item:hover .item-actions { opacity: 1; }
+  .icon-btn { border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: grid; place-items: center; color: var(--ink-faint); transition: all 0.15s ease; font-family: inherit; }
+  .icon-btn:hover { background: var(--bg-soft); color: var(--ink); }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .empty-day { text-align: center; padding: 60px 20px; color: var(--ink-faint); }
+  .empty-day-quote { font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; color: var(--ink-soft); margin-bottom: 8px; font-variation-settings: "opsz" 80, "SOFT" 100; }
+
+  #mapView, #photosView { display: none; }
+  #mapContainer { height: 70vh; min-height: 540px; border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; background: var(--paper); position: relative; }
+  #mapContainer.picking { cursor: crosshair; }
+  #map { height: 100%; width: 100%; background: #DCE3DD; }
+  .map-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding: 12px 16px; background: var(--paper); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--ink-soft); align-items: center; }
+  .map-legend strong { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); margin-right: 8px; }
+  .legend-pin { display: inline-flex; align-items: center; gap: 5px; }
+  .legend-pin .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .leaflet-pin-icon { background: transparent; border: none; }
+  .map-pin { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--paper); box-shadow: 0 2px 6px rgba(27,42,31,0.4); display: grid; place-items: center; transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+  .map-pin:hover { transform: scale(1.25); }
+  .map-pin .pin-inner { width: 6px; height: 6px; border-radius: 50%; background: var(--paper); }
+  .map-pin-lodging { background: var(--moss); }
+  .map-pin-food { background: var(--rust); }
+  .map-pin-activity { background: var(--amber); }
+  .map-pin-transport { background: var(--berry); }
+  .map-pin-note { background: var(--ink-soft); }
+  .leaflet-popup-content-wrapper { border-radius: 10px; background: var(--paper); box-shadow: var(--shadow); }
+  .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); margin: 14px 16px; line-height: 1.5; }
+  .leaflet-popup-content h4 { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; margin-bottom: 4px; line-height: 1.2; }
+  .leaflet-popup-content .popup-meta { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .leaflet-popup-content .popup-loc { font-size: 12px; margin-bottom: 4px; }
+  .leaflet-popup-content .popup-notes { font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .leaflet-popup-content button { border: none; background: var(--moss); color: var(--paper); padding: 6px 12px; border-radius: 5px; font: inherit; font-size: 11px; cursor: pointer; margin-top: 6px; font-family: inherit; }
+  .leaflet-popup-tip { background: var(--paper); }
+  .leaflet-tooltip { background: var(--ink); color: var(--paper); border: none; padding: 6px 10px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; box-shadow: var(--shadow); }
+  .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before, .leaflet-tooltip-left:before, .leaflet-tooltip-right:before { border-top-color: var(--ink); border-bottom-color: var(--ink); border-left-color: var(--ink); border-right-color: var(--ink); }
+  #routeSummary { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .route-segment { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: all 0.15s ease; }
+  .route-segment:hover { border-color: var(--moss-light); background: var(--paper-warm); }
+  .route-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .route-head strong { font-family: 'Fraunces', serif; font-weight: 500; font-size: 15px; color: var(--ink); }
+  .route-stats { font-family: 'Fraunces', serif; font-size: 13px; color: var(--moss); font-weight: 500; }
+  .route-stats.route-loading { color: var(--ink-faint); font-style: italic; font-weight: 400; font-family: 'DM Sans', sans-serif; }
+  .route-stats.route-error { color: var(--berry); font-style: italic; font-weight: 400; font-family: 'DM Sans', sans-serif; }
+  .route-via { font-size: 12px; color: var(--ink-soft); margin-top: 4px; font-style: italic; }
+  .route-empty { font-size: 13px; color: var(--ink-faint); padding: 16px; text-align: center; font-style: italic; }
+  .ai-reply { background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 24px; display: none; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+  .ai-reply.show { display: flex; }
+  .ai-reply-header { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-soft); }
+  .ai-reply-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; color: var(--ink); font-variation-settings: "opsz" 60; }
+  .ai-reply-count { font-size: 11px; color: var(--ink-faint); margin-right: auto; letter-spacing: 0.04em; }
+  .ai-reply-clear { border: 1px solid var(--border); background: var(--paper-warm); color: var(--ink-soft); cursor: pointer; font-size: 12px; padding: 5px 10px; border-radius: 6px; font-family: inherit; transition: all 0.15s ease; }
+  .ai-reply-clear:hover { background: var(--paper); color: var(--ink); border-color: var(--moss-light); }
+  .ai-reply-thread { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .msg { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 92%; word-wrap: break-word; }
+  .msg-text { white-space: pre-wrap; }
+  .msg-user { background: var(--moss); color: var(--paper); align-self: flex-end; border-bottom-right-radius: 3px; }
+  .msg-assistant { background: var(--paper-warm); color: var(--ink); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 3px; }
+  .msg-error { background: rgba(110,47,58,0.08); border: 1px solid var(--berry); color: var(--berry); align-self: flex-start; border-bottom-left-radius: 3px; }
+  .msg-warning { color: var(--rust); font-size: 12px; margin-top: 8px; padding: 6px 10px; background: rgba(160,82,45,0.1); border-radius: 6px; }
+  .msg-dup { color: var(--ink-soft); font-size: 12px; margin-top: 8px; padding: 6px 10px; background: var(--bg-soft); border-radius: 6px; font-style: italic; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .photo-card { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.18s ease; box-shadow: var(--shadow); }
+  .photo-card:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(27,42,31,0.04), 0 14px 32px -14px rgba(27,42,31,0.22); }
+  .photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .photo-card-meta { padding: 10px 12px; }
+  .photo-card-title { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 500; line-height: 1.3; margin-bottom: 3px; }
+  .photo-card-sub { font-size: 11px; color: var(--ink-faint); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .photo-card-sub .pill { background: var(--bg-soft); padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+  .photos-empty { text-align: center; padding: 80px 20px; color: var(--ink-faint); }
+  .photos-empty .quote { font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; color: var(--ink-soft); margin-bottom: 8px; }
+
+  .lightbox { position: fixed; inset: 0; background: rgba(20,28,22,0.92); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; flex-direction: column; gap: 16px; }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 75vh; border-radius: 8px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
+  .lightbox-info { color: var(--paper); text-align: center; max-width: 600px; }
+  .lightbox-info h4 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 400; margin-bottom: 4px; }
+  .lightbox-info p { font-size: 13px; opacity: 0.75; }
+  .lightbox-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: var(--paper); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; font-family: inherit; }
+  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+  .lightbox-close svg { width: 18px; height: 18px; }
+
+  .fab { position: fixed; bottom: 32px; right: 32px; bottom: max(32px, calc(32px + env(safe-area-inset-bottom))); width: 60px; height: 60px; border-radius: 50%; background: var(--moss); color: var(--paper); border: none; cursor: pointer; display: grid; place-items: center; box-shadow: 0 16px 32px -8px rgba(45,71,54,0.45); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; font-family: inherit; }
+  .fab:hover { transform: scale(1.06) rotate(90deg); background: var(--moss-deep); }
+  .fab svg { width: 24px; height: 24px; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(27,42,31,0.45); backdrop-filter: blur(6px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+  .modal-bg.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal { background: var(--paper); border-radius: 16px; box-shadow: var(--shadow-deep); width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+  .modal-wide { max-width: 760px; }
+  .modal-header { padding: 22px 26px 14px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: baseline; }
+  .modal-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 400; letter-spacing: -0.01em; font-variation-settings: "opsz" 80; }
+  .modal-title em { font-style: italic; color: var(--moss); font-variation-settings: "opsz" 80, "SOFT" 100; }
+  .modal-body { padding: 22px 26px 26px; }
+  .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .form-row.split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  .form-row input, .form-row textarea, .form-row select { border: 1px solid var(--border); background: var(--paper-warm); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 14px; color: var(--ink); transition: border-color 0.15s ease; font-family: inherit; }
+  .form-row input:focus, .form-row textarea:focus, .form-row select:focus { outline: none; border-color: var(--moss); background: var(--paper); }
+  .form-row textarea { resize: vertical; min-height: 60px; }
+  .type-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .type-btn { border: 1px solid var(--border); background: var(--paper-warm); border-radius: 8px; padding: 10px 6px; cursor: pointer; text-align: center; font: inherit; font-size: 11px; color: var(--ink-soft); transition: all 0.15s ease; font-family: inherit; }
+  .type-btn:hover { border-color: var(--moss-light); }
+  .type-btn.active { background: var(--moss); color: var(--paper); border-color: var(--moss); }
+  .type-btn span { display: block; font-size: 18px; margin-bottom: 4px; }
+  .modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 8px; flex-wrap: wrap; }
+  .coord-row { display: flex; gap: 6px; align-items: center; }
+  .coord-row input { flex: 1; }
+  .coord-row .btn { padding: 9px 12px; font-size: 12px; }
+
+  .photo-upload { border: 1.5px dashed var(--border); background: var(--paper-warm); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s ease; position: relative; }
+  .photo-upload:hover { border-color: var(--moss); background: var(--paper); }
+  .photo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .photo-upload-icon { font-size: 24px; margin-bottom: 6px; }
+  .photo-upload-text { font-size: 13px; color: var(--ink-soft); }
+  .photo-upload-text strong { color: var(--moss); font-weight: 500; }
+  .photo-upload.processing { pointer-events: none; opacity: 0.6; }
+  .uploaded-photos { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .uploaded-photo { position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .uploaded-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .uploaded-photo .remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border: none; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; display: grid; place-items: center; font-family: inherit; }
+
+  .reservations-list { display: flex; flex-direction: column; gap: 14px; }
+  .res-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--paper-warm); }
+  .res-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .res-title { font-family: 'Fraunces', serif; font-size: 17px; font-variation-settings: "opsz" 60; }
+  .res-date { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+  .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; color: var(--ink-soft); }
+  .res-grid > div { display: flex; gap: 6px; }
+  .res-grid strong { color: var(--ink); font-weight: 500; }
+  .res-grid a { color: var(--moss); text-decoration: none; border-bottom: 1px solid transparent; }
+  .res-grid a:hover { border-color: var(--moss); }
+  .res-card .manage-btn { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; font-size: 12px; background: var(--moss); color: var(--paper); border-radius: 6px; text-decoration: none; transition: background 0.15s ease; }
+  .res-card .manage-btn:hover { background: var(--moss-deep); }
+  @media (max-width: 600px) { .res-grid { grid-template-columns: 1fr; } }
+
+  .who-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: grid; place-items: center; padding: 20px; }
+  .who-card { text-align: center; max-width: 400px; }
+  .who-card h2 { font-family: 'Fraunces', serif; font-size: 42px; font-weight: 300; line-height: 1.05; margin-bottom: 8px; font-variation-settings: "opsz" 144; }
+  .who-card h2 em { font-style: italic; color: var(--moss); font-variation-settings: "opsz" 144, "SOFT" 100; }
+  .who-card p { color: var(--ink-soft); margin-bottom: 32px; }
+  .who-options { display: grid; gap: 12px; }
+  .who-opt { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); background: var(--paper); border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: all 0.18s ease; text-align: left; font: inherit; color: var(--ink); font-family: inherit; }
+  .who-opt:hover { border-color: var(--moss); transform: translateX(2px); }
+  .who-opt .who-avatar { width: 40px; height: 40px; font-size: 18px; }
+
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 100px; font-size: 13px; box-shadow: var(--shadow-deep); z-index: 150; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; max-width: 90vw; text-align: center; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .paste-area textarea { width: 100%; min-height: 200px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .parsed-preview { margin-top: 14px; padding: 14px 16px; background: var(--paper-warm); border: 1px solid var(--border); border-radius: 10px; }
+  .parsed-preview h4 { font-family: 'Fraunces', serif; font-size: 16px; margin-bottom: 8px; }
+  .parsed-preview .ppair { display: flex; gap: 10px; font-size: 13px; margin-bottom: 4px; color: var(--ink-soft); }
+  .parsed-preview .ppair strong { color: var(--ink); min-width: 90px; }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 28px 18px 96px; }
+    header.masthead { grid-template-columns: 1fr; }
+    .meta-stack { align-items: flex-start; text-align: left; }
+    .item { grid-template-columns: auto 1fr; }
+    .item-actions { grid-column: 2; flex-direction: row; }
+    .day-name { font-size: 9px; }
+    .ai-bar { padding: 6px 6px 6px 14px; }
+    .ai-input { font-size: 13px; padding: 10px 0; }
+    .ai-btn { padding: 8px 12px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="who-overlay" id="whoOverlay">
+  <div class="who-card">
+    <h2>Slán go <em>fóill</em></h2>
+    <p>Welcome. Pick who's adding to the trip so we know whose hand is on the page.</p>
+    <div class="who-options">
+      <button class="who-opt" data-who="Connor"><span class="who-avatar">C</span><div><div style="font-family: 'Fraunces', serif; font-size: 18px;">Connor</div><div style="font-size: 12px; color: var(--ink-soft);">that's me</div></div></button>
+      <button class="who-opt" data-who="Megan"><span class="who-avatar megan">M</span><div><div style="font-family: 'Fraunces', serif; font-size: 18px;">Megan</div><div style="font-size: 12px; color: var(--ink-soft);">that's me</div></div></button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div>
+    <div class="brand-row"><span>Apr 29 – May 7, '26</span><span class="brand-rule"></span></div>
+    <h1 class="title">Éireann <em>'26</em></h1>
+    <p class="subtitle">A nine-day road trip — Dublin, the south coast, the Ring of Kerry, the Cliffs, Galway. Type ideas, drop pins, snap photos.</p>
+  </div>
+  <div class="meta-stack">
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="icon-btn" id="settingsBtn" title="Settings" style="border: 1px solid var(--border); width: 38px; height: 38px; border-radius: 100px; background: var(--paper);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+      <button class="who-pill" id="whoPill"><span class="who-avatar" id="whoAvatar">C</span><span>Logged in as <strong id="whoName">Connor</strong></span></button>
+    </div>
+    <div class="stats"><span><strong id="statTotal">0</strong>items</span><span><strong id="statDone">0</strong>done</span><span><strong id="statPhotos">0</strong>photos</span></div>
+  </div>
+</header>
+
+<div class="ai-bar">
+  <svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L13.5 9L22.5 10.5L13.5 12L12 21L10.5 12L1.5 10.5L10.5 9L12 0Z"/></svg>
+  <input type="text" class="ai-input" id="aiInput" placeholder="Ask Claude or add things… 'best Galway pub?' or 'add lunch at Bastion'">
+  <button class="paste-btn" id="pasteBtn" title="Paste a confirmation email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-4"/></svg></button>
+  <button class="ai-btn" id="aiBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Add</span></button>
+</div>
+
+<div class="view-tabs" id="viewTabs">
+  <button class="vtab active" data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</button>
+  <button class="vtab" data-view="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Map</button>
+  <button class="vtab" data-view="photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Photos</button>
+</div>
+
+<section id="calendarView">
+  <div class="toolbar">
+    <div class="filter-group" id="filterGroup">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="lodging">Lodging</button>
+      <button class="filter-chip" data-filter="food">Food</button>
+      <button class="filter-chip" data-filter="activity">Activity</button>
+      <button class="filter-chip" data-filter="transport">Transport</button>
+    </div>
+    <button class="btn" id="reservationsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>All reservations</button>
+    <button class="btn btn-ghost" id="resetBtn" style="margin-left: auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Reset</button>
+  </div>
+  <nav class="day-nav" id="dayNav"></nav>
+  <div class="day-header">
+    <div><h2 class="day-title" id="dayTitle">Loading…</h2><p class="day-subtitle" id="daySubtitle"></p></div>
+    <span class="day-count" id="dayCount"></span>
+  </div>
+  <div class="items" id="items"></div>
+</section>
+
+<section id="mapView">
+  <div id="mapContainer"><div id="map"></div></div>
+  <div class="map-legend">
+    <strong>Pins</strong>
+    <span class="legend-pin"><span class="dot" style="background: var(--moss);"></span>Lodging</span>
+    <span class="legend-pin"><span class="dot" style="background: var(--rust);"></span>Food</span>
+    <span class="legend-pin"><span class="dot" style="background: var(--amber);"></span>Activity</span>
+    <span class="legend-pin"><span class="dot" style="background: var(--berry);"></span>Transport</span>
+    <span style="margin-left: auto; font-style: italic;">Click a pin to view. Routes show real driving paths via OSRM.</span>
+  </div>
+  <div id="routeSummary"></div>
+</section>
+
+<section id="photosView">
+  <div class="toolbar"><div style="font-size: 13px; color: var(--ink-soft); font-style: italic;">Photos appear here as you and Megan add them. EXIF location and timestamp are pulled automatically when available.</div></div>
+  <div id="photoGrid" class="photo-grid"></div>
+</section>
+
+</div>
+
+<button class="fab" id="addBtn" title="Add an item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title"><em>Settings</em></h3><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;">To use Claude AI features (the search bar, paste-booking parser) in <strong>Chrome or any browser outside Claude.ai</strong>, paste your Anthropic API key here. It saves to this device only.</p>
+      <p style="font-size: 12px; color: var(--ink-faint); margin-bottom: 18px;">Inside Claude.ai's preview, no key is needed — it just works. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--moss);">Get a key →</a></p>
+      <div class="form-row">
+        <label>Anthropic API key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off">
+      </div>
+      <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>Backup & restore.</strong> Export the whole trip as a JSON file you can save to your computer, email to yourself, or share with Megan. Import it later to restore everything.</p>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <button class="btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export JSON</button>
+          <label class="btn" style="cursor: pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Import JSON<input type="file" id="importInput" accept="application/json,.json" style="display: none;"></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="clearKeyBtn" style="color: var(--berry);">Remove key</button>
+        <div style="display: flex; gap: 8px; margin-left: auto;">
+          <button class="btn" data-close>Cancel</button>
+          <button class="btn btn-primary" id="saveKeyBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="formModal">
+  <div class="modal">
+    <div class="modal-header"><h3 class="modal-title" id="formTitle">A new <em>thing</em></h3><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>What is it?</label><input type="text" id="fTitle" placeholder="Cliffs of Moher hike, dinner at the pub…"></div>
+      <div class="form-row"><label>Type</label>
+        <div class="type-picker" id="fType">
+          <button class="type-btn active" data-type="activity"><span>⭐</span>Activity</button>
+          <button class="type-btn" data-type="food"><span>🍽️</span>Food</button>
+          <button class="type-btn" data-type="lodging"><span>🏠</span>Lodging</button>
+          <button class="type-btn" data-type="transport"><span>🚗</span>Transport</button>
+          <button class="type-btn" data-type="note"><span>📝</span>Note</button>
+        </div>
+      </div>
+      <div class="form-row split">
+        <div class="form-row" style="margin: 0;"><label>Day</label><select id="fDate"></select></div>
+        <div class="form-row" style="margin: 0;"><label>Time (optional)</label><input type="time" id="fTime"></div>
+      </div>
+      <div class="form-row" id="fCheckoutRow" style="display: none;"><label>Check-out date <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(creates a matching check-out item)</span></label><select id="fCheckoutDate"></select></div>
+      <div class="form-row"><label>Location</label><input type="text" id="fLocation" placeholder="where it is"></div>
+      <div class="form-row"><label>Coordinates (optional)</label>
+        <div class="coord-row">
+          <input type="text" id="fCoords" placeholder="lat, lng">
+          <button type="button" class="btn" id="pickOnMapBtn">Pick on map</button>
+        </div>
+      </div>
+      <div class="form-row"><label>Notes</label><textarea id="fNotes" placeholder="anything to remember"></textarea></div>
+      <div class="form-row split">
+        <div class="form-row" style="margin: 0;"><label>Link</label><input type="url" id="fLink" placeholder="https://…"></div>
+        <div class="form-row" style="margin: 0;"><label>Contact / Conf #</label><input type="text" id="fContact" placeholder="phone, email, conf #"></div>
+      </div>
+      <div class="form-row"><label>Photos</label>
+        <div class="photo-upload" id="photoUpload">
+          <input type="file" id="photoInput" accept="image/*" multiple>
+          <div class="photo-upload-icon">📷</div>
+          <div class="photo-upload-text"><strong>Click to upload</strong> or drop photos here. Location & date are pulled from EXIF if present.</div>
+        </div>
+        <div class="uploaded-photos" id="uploadedPhotos"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="deleteBtn" style="display: none; color: var(--berry);">Delete</button>
+        <div style="display: flex; gap: 8px; margin-left: auto;">
+          <button class="btn" data-close>Cancel</button>
+          <button class="btn btn-primary" id="saveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="pasteModal">
+  <div class="modal modal-wide">
+    <div class="modal-header"><h3 class="modal-title">Paste a <em>booking</em></h3><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 14px;">Paste any confirmation email — Airbnb, Hotels.com, restaurant, tour booking, even a forwarded text. AI pulls out the title, dates, location, contacts, conf #, and link, and drops it on the right day.</p>
+      <div class="paste-area">
+        <textarea id="pasteText" placeholder="Paste the full email or confirmation text here..."></textarea>
+      </div>
+      <div id="parsedPreview" class="parsed-preview" style="display: none;"></div>
+      <div class="modal-footer">
+        <button class="btn" data-close>Cancel</button>
+        <div style="display: flex; gap: 8px; margin-left: auto;">
+          <button class="btn btn-primary" id="parseBtn"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0L13.5 9L22.5 10.5L13.5 12L12 21L10.5 12L1.5 10.5L10.5 9L12 0Z"/></svg>Parse with AI</button>
+          <button class="btn btn-primary" id="addParsedBtn" style="display: none;">Looks good — add it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="resModal">
+  <div class="modal modal-wide">
+    <div class="modal-header"><h3 class="modal-title">All <em>reservations</em></h3><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 18px;">Pulled from Connor's email. Click <strong>Manage booking</strong> on any one to open the provider's site.</p>
+      <div class="reservations-list" id="reservationsList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+  <img id="lightboxImg" alt="">
+  <div class="lightbox-info"><h4 id="lightboxTitle"></h4><p id="lightboxMeta"></p></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exifr/7.1.3/full.umd.js"></script>
+
+<script>
+const TRIP_DAYS = [
+  { date: '2026-04-29', name: 'Wed', label: 'Wed Apr 29', long: 'Wednesday, April 29' },
+  { date: '2026-04-30', name: 'Thu', label: 'Thu Apr 30', long: 'Thursday, April 30' },
+  { date: '2026-05-01', name: 'Fri', label: 'Fri May 1', long: 'Friday, May 1' },
+  { date: '2026-05-02', name: 'Sat', label: 'Sat May 2', long: 'Saturday, May 2' },
+  { date: '2026-05-03', name: 'Sun', label: 'Sun May 3', long: 'Sunday, May 3' },
+  { date: '2026-05-04', name: 'Mon', label: 'Mon May 4', long: 'Monday, May 4' },
+  { date: '2026-05-05', name: 'Tue', label: 'Tue May 5', long: 'Tuesday, May 5' },
+  { date: '2026-05-06', name: 'Wed', label: 'Wed May 6', long: 'Wednesday, May 6' },
+  { date: '2026-05-07', name: 'Thu', label: 'Thu May 7', long: 'Thursday, May 7' },
+];
+
+const DAY_TAGLINES = {
+  '2026-04-29': 'Wheels up — westward to the Atlantic.',
+  '2026-04-30': 'Dublin. Library, brewery, pub crawl.',
+  '2026-05-01': 'South to County Cork. The countryside opens up.',
+  '2026-05-02': 'Kinsale day. Forts, seafood, slow walks.',
+  '2026-05-03': 'Onward to the Ring of Kerry.',
+  '2026-05-04': 'Skellig morning. Cahersiveen base.',
+  '2026-05-05': 'Dingle peninsula → Conor Pass → Galway.',
+  '2026-05-06': 'Cliffs of Moher. Galway. Aniar in the evening.',
+  '2026-05-07': 'Last morning in Galway. Drive to Dublin. Home.',
+};
+
+const SEED = [
+  { id: 's1', date: '2026-04-29', time: '', title: 'Fly out from Eagle (EGE) → Dublin', type: 'transport', location: 'Eagle County Regional Airport', lat: 39.6457, lng: -106.9173, notes: 'Add flight number and times when you have them.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's2', date: '2026-04-30', time: '11:30', title: 'Pick up rental — Enterprise', type: 'transport', location: 'Dublin Airport, Eastlands Car Hire Facility', lat: 53.4265, lng: -6.2499, notes: 'Ford Fiesta or similar · automatic · unlimited mileage. Returns Thu May 7 @ 11:30 AM.', link: 'https://www.enterprise.com/en/help/faqs/reservation/cancel-or-modify.html', contact: '+353 1 844 5848', confirmation: 'Conf # 2107206896', done: false, by: 'auto', photos: [] },
+  { id: 's2a', date: '2026-04-30', time: '13:00', title: 'Marsh\'s Library', type: 'activity', location: 'St Patrick\'s Close, Dublin 8', lat: 53.3393, lng: -6.2706, notes: 'Ireland\'s oldest public library, opened 1707. Three rooms of dark oak shelves, untouched since the Enlightenment. Quietly extraordinary.', link: 'https://www.marshlibrary.ie/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2c', date: '2026-04-30', time: '14:15', title: 'Guinness Storehouse — STOUTie Experience', type: 'activity', location: 'St. James\'s Gate, Dublin 8', lat: 53.3422, lng: -6.2867, notes: 'Booked under Megan\'s name. Allow ~2 hrs.', link: 'https://www.guinnessstorehouse.com/', contact: '', confirmation: 'Ref # 904062524', done: false, by: 'auto', photos: [] },
+  { id: 's2d', date: '2026-04-30', time: '16:30', title: 'Check in — The Mercantile Hotel', type: 'lodging', location: '28 Dame Street, Dublin', lat: 53.3439, lng: -6.2670, notes: '1 night. Check out by 11 AM tomorrow.', link: 'https://www.hotels.com/trips', contact: '', confirmation: 'Itinerary # 73427005551843', done: false, by: 'auto', photos: [] },
+  { id: 's2drury', date: '2026-04-30', time: '17:00', title: 'Stroll Drury Street', type: 'activity', location: 'Drury Street, Dublin 2', lat: 53.3416, lng: -6.2638, notes: 'Pedestrianized strip just off Grafton — vintage shops, the Drury Buildings, leafy walk past Stephen\'s Green back to the hotel.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2b', date: '2026-04-30', time: '17:30', title: 'Trinity College & Book of Kells', type: 'activity', location: 'College Green, Dublin 2', lat: 53.3438, lng: -6.2546, notes: 'Iconic illuminated manuscript + the Long Room library. Late slot is quieter.', link: 'https://www.tcd.ie/visitors/book-of-kells/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2e', date: '2026-04-30', time: '18:30', title: 'Spice bags at Xi\'an Street Food', type: 'food', location: '37 Capel Street, Dublin', lat: 53.3484, lng: -6.2693, notes: 'The Dublin spice bag — chili-spiced fried chicken, peppers, fries, all in a bag. Quick early dinner before the crawl.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2f', date: '2026-04-30', time: '19:45', title: 'Sophie\'s rooftop at The Dean', type: 'food', location: 'The Dean Hotel, 33 Harcourt St, Dublin 2', lat: 53.3361, lng: -6.2614, notes: 'Glass-roofed rooftop bar with city views. Cocktail before the pubs.', link: 'https://www.thedean.ie/eat-drink/sophies/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2g', date: '2026-04-30', time: '20:45', title: 'Pub 1 — Palace Bar', type: 'food', location: '21 Fleet St, Temple Bar, Dublin', lat: 53.3458, lng: -6.2581, notes: 'Victorian gem at the edge of Temple Bar. Famously a writers\' pub — Patrick Kavanagh, Brendan Behan.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2h', date: '2026-04-30', time: '21:30', title: 'Pub 2 — The Long Hall', type: 'food', location: '51 South Great George\'s St, Dublin', lat: 53.3424, lng: -6.2649, notes: 'One of the most beautiful Victorian interiors in Ireland. Ornate ceiling, brass, mirrors.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2i', date: '2026-04-30', time: '22:15', title: 'Pub 3 — The Swan', type: 'food', location: '58 Aungier St, Dublin', lat: 53.3403, lng: -6.2654, notes: 'Two doors from the Long Hall. Snug bar, gorgeous old-Dublin feel, frequented by locals.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2j', date: '2026-04-30', time: '23:00', title: 'Pub 4 — Kehoes', type: 'food', location: '9 South Anne St, Dublin 2', lat: 53.3413, lng: -6.2592, notes: 'Tucked off Grafton Street. Tiny, wooden, perfect.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's2k', date: '2026-04-30', time: '23:45', title: 'Pub 5 — The Gravediggers (Kavanagh\'s)', type: 'food', location: '1 Prospect Square, Glasnevin', lat: 53.3713, lng: -6.2700, notes: 'Hidden behind Glasnevin Cemetery — taxi from the city. The pour-of-the-stout is legendary. Note: closes 23:30 weekdays — may need to go earlier or save for an afternoon visit.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's3', date: '2026-05-01', time: '11:00', title: 'Check out — Mercantile Hotel', type: 'lodging', location: '28 Dame Street, Dublin', lat: 53.3439, lng: -6.2670, notes: '', link: 'https://www.hotels.com/trips', contact: '', confirmation: 'Itinerary # 73427005551843', done: false, by: 'auto', photos: [] },
+  { id: 's3b', date: '2026-05-01', time: '16:00', title: 'Check in — Tulligmore Cottage', type: 'lodging', location: 'Tullig More, Ballinhassig, Co. Cork', lat: 51.8167, lng: -8.5304, notes: '2 nights with Zita. Check-in after 4 PM. ~3 hr drive from Dublin via M7/M8.', link: 'https://www.airbnb.com/rooms/31536066', contact: 'Zita · +353 87 982 8943', confirmation: 'HMSKAQJF3H', done: false, by: 'auto', photos: [] },
+
+  { id: 's4a', date: '2026-05-02', time: '11:00', title: 'Scilly Walk to Charles Fort', type: 'activity', location: 'Kinsale, Co. Cork', lat: 51.7042, lng: -8.5125, notes: '40-min waterside walk from town along the harbor. The right way to arrive at Charles Fort.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's4b', date: '2026-05-02', time: '12:00', title: 'Charles Fort', type: 'activity', location: 'Summer Cove, Kinsale, Co. Cork', lat: 51.6985, lng: -8.4988, notes: 'Star-shaped 17th-century fort with cliff views over the harbor.', link: 'https://heritageireland.ie/places-to-visit/charles-fort/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's4c', date: '2026-05-02', time: '13:30', title: 'Lunch at Fishy Fishy', type: 'food', location: 'Crowley\'s Quay, Kinsale', lat: 51.7058, lng: -8.5234, notes: 'The Kinsale lunch. Fresh-off-the-boat seafood, casual, on the water.', link: 'https://www.fishyfishy.ie/', contact: '+353 21 470 0415', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's4d', date: '2026-05-02', time: '17:00', title: 'Pint at The Bulman', type: 'food', location: 'Summercove, Kinsale', lat: 51.6986, lng: -8.5044, notes: 'Local waterside pub, less touristy than town. Worth the walk back from Charles Fort.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's4e', date: '2026-05-02', time: '20:00', title: 'Dinner at Bastion', type: 'food', location: 'Market St, Kinsale', lat: 51.7060, lng: -8.5240, notes: 'Michelin guide. Modern Irish tasting. BOOK AHEAD.', link: 'https://www.bastionkinsale.com/', contact: '+353 21 470 9696', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's5', date: '2026-05-03', time: '10:00', title: 'Check out — Tulligmore Cottage', type: 'lodging', location: 'Ballinhassig, Co. Cork', lat: 51.8167, lng: -8.5304, notes: 'By 10 AM.', link: 'https://www.airbnb.com/rooms/31536066', contact: '', confirmation: 'HMSKAQJF3H', done: false, by: 'auto', photos: [] },
+  { id: 's5b', date: '2026-05-03', time: '11:30', title: 'Blarney Castle (optional stop)', type: 'activity', location: 'Blarney, Co. Cork', lat: 51.9292, lng: -8.5703, notes: 'Kiss the Stone if you must. Honestly the gardens are the better part.', link: 'https://www.blarneycastle.ie/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's5c', date: '2026-05-03', time: '15:00', title: 'Check in — Quinlan & Cooke Boutique Townhouse', type: 'lodging', location: '3 Main Street, Cahersiveen, Kerry V23 WA46', lat: 51.9489, lng: -10.2197, notes: '2 nights — base for Skellig and the Iveragh peninsula. Cork → Cahersiveen ~2.5 hrs.', link: 'https://www.qcahersiveen.com/', contact: '+353 66 947 2244 · hello@qc.ie', confirmation: 'Conf # 646-168-642', done: false, by: 'auto', photos: [] },
+  { id: 's5d', date: '2026-05-03', time: '20:00', title: 'Dinner at QC Bar', type: 'food', location: '3 Main Street, Cahersiveen', lat: 51.9489, lng: -10.2197, notes: 'Restaurant downstairs at your hotel. Excellent local seafood — stress-free first night.', link: 'https://www.qcahersiveen.com/qcbar', contact: '+353 66 947 2244', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's6', date: '2026-05-04', time: '08:30', title: 'Skellig Michael boat — puffins!', type: 'activity', location: 'Portmagee Pier', lat: 51.8867, lng: -10.3667, notes: 'BOOK FAR IN ADVANCE. Puffin season May–July. Boats only run if seas allow. The most unforgettable thing you can do in Ireland.', link: 'https://www.skelligmichaeltrips.com/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's6b', date: '2026-05-04', time: '15:00', title: 'Drive Skellig Ring (Valentia, Geokaun)', type: 'activity', location: 'Valentia Island, Co. Kerry', lat: 51.9233, lng: -10.3122, notes: 'After Skellig if seas were rough, or as a chaser if they weren\'t. Geokaun Mountain has dramatic clifftop views; Valentia\'s tetrapod tracks are 385 million years old.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's6c', date: '2026-05-04', time: '19:30', title: 'Trad music in Cahersiveen', type: 'food', location: 'Cahersiveen, Kerry', lat: 51.9489, lng: -10.2197, notes: 'Mike Murt\'s or The Anchor Bar for proper local trad sessions. Quiet town, great craic.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's7a', date: '2026-05-05', time: '08:00', title: 'Check out — Quinlan & Cooke', type: 'lodging', location: 'Cahersiveen, Kerry', lat: 51.9489, lng: -10.2197, notes: 'Early start — long day to Galway via the Dingle peninsula.', link: 'https://www.qcahersiveen.com/', contact: '', confirmation: 'Conf # 646-168-642', done: false, by: 'auto', photos: [] },
+  { id: 's7b', date: '2026-05-05', time: '10:30', title: 'Dingle Sea Safari', type: 'activity', location: 'The Pier, Dingle', lat: 52.1410, lng: -10.2742, notes: 'RIB boat trip into Dingle Bay — dolphins, seabirds, sea caves. ~1 hr. Book ahead online.', link: 'https://www.dingleseasafari.com/', contact: '+353 66 915 1344', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7c', date: '2026-05-05', time: '12:00', title: 'Hold a baby lamb — Famine Cottages', type: 'activity', location: 'Fahan, Slea Head Drive', lat: 52.1219, lng: -10.4500, notes: 'Slea Head Famine Cottages — restored 19th-century cottages with rare-breed sheep, donkeys, and lambs you can hold. Tactile, sweet, very Megan.', link: 'https://www.famineandfarm.com/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7d', date: '2026-05-05', time: '13:30', title: 'Lunch at Café na Trá', type: 'food', location: 'Wine Strand, Ballyferriter, Co. Kerry', lat: 52.1657, lng: -10.4269, notes: 'Tiny seaside café out on the peninsula. Soup, sandwiches, extraordinary view.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7e', date: '2026-05-05', time: '14:30', title: 'Coumeenoole Beach', type: 'activity', location: 'Dunmore Head, Slea Head', lat: 52.1167, lng: -10.4694, notes: 'Tucked under the cliffs of Dunmore Head. The Atlantic at its wildest — westernmost point of Europe.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7f', date: '2026-05-05', time: '15:30', title: 'Dunquin Pier (zigzag pier)', type: 'activity', location: 'Dunquin, Co. Kerry', lat: 52.1242, lng: -10.4717, notes: 'The famous zigzag concrete pier. Sunset would be epic at 9 PM but you have to get to Galway tonight.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7g', date: '2026-05-05', time: '16:30', title: 'Quick stop — Out of the Blue or The Fishbox', type: 'food', location: 'The Wood, Dingle', lat: 52.1397, lng: -10.2684, notes: 'Out of the Blue is the most acclaimed seafood spot in Dingle — no menu, only what was caught that morning. The Fishbox is the family-run alternative right nearby.', link: 'https://www.outoftheblue.ie/', contact: '+353 66 915 0811', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7h', date: '2026-05-05', time: '17:30', title: 'Drive over Conor Pass', type: 'activity', location: 'Conor Pass, Co. Kerry', lat: 52.1817, lng: -10.1850, notes: 'Highest mountain pass in Ireland. Pull off at the top. Narrow road — go slow. Then north to Galway (~2.5 hrs).', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's7i', date: '2026-05-05', time: '20:30', title: 'Check in — The House Hotel', type: 'lodging', location: 'Spanish Parade, Galway', lat: 53.2706, lng: -9.0575, notes: '2 nights. Standard Room. Paid €385.20. Check-in 15:00–22:00 — call ahead if running late.', link: 'https://www.thehousehotel.ie/', contact: '', confirmation: 'Booking ref E57AX3G', done: false, by: 'auto', photos: [] },
+
+  { id: 's8a', date: '2026-05-06', time: '08:30', title: 'Breakfast at Magpie Café', type: 'food', location: 'Galway city centre', lat: 53.2722, lng: -9.0536, notes: 'Cozy local brunch spot — perfect fuel before driving to the Cliffs.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8b', date: '2026-05-06', time: '09:30', title: 'Drive to the Cliffs of Moher', type: 'transport', location: 'Galway → Co. Clare', lat: 53.0500, lng: -9.0500, notes: 'About 1 hr 15 each way. Stop at Poulnabrone Dolmen in the Burren if you have time.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8c', date: '2026-05-06', time: '11:00', title: 'Cliffs of Moher coastal walk', type: 'activity', location: 'Doolin → Cliffs of Moher trail', lat: 52.9719, lng: -9.4264, notes: 'Skip the visitor center lot. Park in Doolin and walk the coastal trail north — free, dramatic, almost empty.', link: 'https://cliffsofmoher.ie/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8hag', date: '2026-05-06', time: '13:00', title: 'Hag\'s Head', type: 'activity', location: 'Hag\'s Head, Co. Clare', lat: 52.9333, lng: -9.4167, notes: 'Dramatic headland at the south end of the Cliffs walk. Stone signal tower (Moher Tower) on top — quieter than the visitor centre, same Atlantic.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8d', date: '2026-05-06', time: '14:30', title: 'Lunch at Kai or Dela', type: 'food', location: 'Galway', lat: 53.2705, lng: -9.0598, notes: 'Kai (Sea Rd) for ambitious daytime cooking, Dela (Dominick St) for farm-to-table. Either is excellent. Aniar is tonight, so go medium-light here.', link: 'https://kaicaife.ie/', contact: '+353 91 526 003', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8e', date: '2026-05-06', time: '16:00', title: 'Galway Cathedral', type: 'activity', location: 'Nun\'s Island, Galway', lat: 53.2756, lng: -9.0550, notes: 'Massive limestone cathedral with a green-copper dome, built 1965 but feels older. Five minutes is enough.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8f', date: '2026-05-06', time: '16:45', title: 'Thomas Dillon\'s Claddagh Gold', type: 'activity', location: '1 Quay Street, Galway', lat: 53.2710, lng: -9.0529, notes: 'Original makers of the Claddagh ring since 1750 — hands holding a heart wearing a crown. Tiny shop, big history. Tiny museum in the back.', link: 'https://claddaghring.ie/', contact: '+353 91 566365', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8g', date: '2026-05-06', time: '17:15', title: 'Galway Market (weekend only)', type: 'activity', location: 'Church Lane, by St. Nicholas\' Church, Galway', lat: 53.2718, lng: -9.0526, notes: '⚠️ Sat/Sun only — likely won\'t be running mid-week. If you find a Friday market in summer, lucky you. Otherwise just walk past on your way to dinner.', link: 'https://galwaymarket.com/', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+  { id: 's8h', date: '2026-05-06', time: '20:00', title: 'Dinner at Aniar', type: 'food', location: '53 Lower Dominick St, Galway', lat: 53.2719, lng: -9.0589, notes: 'Michelin-starred tasting menu. Table for 2. Allow 2.5 hrs. The trip\'s headline meal.', link: 'https://aniarrestaurant.ie/', contact: 'reservations@aniar.tpced.com', confirmation: 'Res # 27858045', done: false, by: 'auto', photos: [] },
+
+  { id: 's9', date: '2026-05-07', time: '08:00', title: 'Check out — The House Hotel', type: 'lodging', location: 'Spanish Parade, Galway', lat: 53.2706, lng: -9.0575, notes: 'Hit the road by 8:30 to make rental return at 11:30.', link: 'https://www.thehousehotel.ie/', contact: '', confirmation: 'Booking ref E57AX3G', done: false, by: 'auto', photos: [] },
+  { id: 's9b', date: '2026-05-07', time: '11:30', title: 'Return rental — Enterprise', type: 'transport', location: 'Dublin Airport (DUB)', lat: 53.4265, lng: -6.2499, notes: 'Galway → DUB ~2.5 hrs.', link: 'https://www.enterprise.com/en/help/faqs/reservation/cancel-or-modify.html', contact: '+353 1 844 5848', confirmation: 'Conf # 2107206896', done: false, by: 'auto', photos: [] },
+  { id: 's9c', date: '2026-05-07', time: '', title: 'Fly home — Dublin → US', type: 'transport', location: 'Dublin Airport (DUB)', lat: 53.4265, lng: -6.2499, notes: 'Add flight number and times.', link: '', contact: '', confirmation: '', done: false, by: 'auto', photos: [] },
+
+  { id: 's-conflict', date: '2026-05-05', time: '15:00', title: '⚠️ Boherbuí Cottage (Doolin) — overlap', type: 'note', location: 'Boherbuí, Doolin, Co. Clare', lat: 53.0068, lng: -9.3552, notes: 'You have BOTH this Airbnb and the House Hotel for May 5. With the new plan you\'re in Galway by 8:30 PM, so cancel Boherbuí. Confirmation HMEP4RB54Z.', link: 'https://www.airbnb.com/trips/v1/upcoming', contact: 'Ciaran & Anna · +353 86 145 0302', confirmation: 'HMEP4RB54Z', done: false, by: 'auto', photos: [] },
+];
+
+let state = { items: [], activeDate: '2026-04-30', filter: 'all', who: null, view: 'calendar', editingId: null, formType: 'activity', formPhotos: [], pickingOnMap: false, parsedItem: null, aiChat: [], deletedSeedIds: [] };
+
+const KEY = 'ireland-trip-v3';
+const CHAT_KEY = 'ireland-trip-v3-chat';
+const DELETED_KEY = 'ireland-trip-v3-deleted';
+
+const tripStorage = {
+  async get(key) {
+    if (window.storage && typeof window.storage.get === 'function') {
+      try {
+        const r = await window.storage.get(key, true);
+        if (r && r.value) return r.value;
+      } catch (e) {}
+    }
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  },
+  async set(key, value) {
+    let saved = false;
+    if (window.storage && typeof window.storage.set === 'function') {
+      try { await window.storage.set(key, value, true); saved = true; } catch (e) {}
+    }
+    try { localStorage.setItem(key, value); saved = true; } catch (e) { if (!saved) throw e; }
+  },
+};
+
+async function loadChat() {
+  try {
+    const v = await tripStorage.get(CHAT_KEY);
+    if (v) state.aiChat = JSON.parse(v) || [];
+  } catch (e) { state.aiChat = []; }
+  if (!Array.isArray(state.aiChat)) state.aiChat = [];
+}
+
+async function saveChat() {
+  try { await tripStorage.set(CHAT_KEY, JSON.stringify(state.aiChat)); } catch (e) {}
+}
+
+async function loadDeletedSeedIds() {
+  try {
+    const v = await tripStorage.get(DELETED_KEY);
+    if (v) state.deletedSeedIds = JSON.parse(v) || [];
+  } catch (e) { state.deletedSeedIds = []; }
+  if (!Array.isArray(state.deletedSeedIds)) state.deletedSeedIds = [];
+}
+
+async function saveDeletedSeedIds() {
+  try { await tripStorage.set(DELETED_KEY, JSON.stringify(state.deletedSeedIds)); } catch (e) {}
+}
+
+async function deleteItemById(id) {
+  state.items = state.items.filter(x => x.id !== id);
+  if (SEED.some(s => s.id === id) && !state.deletedSeedIds.includes(id)) {
+    state.deletedSeedIds.push(id);
+    await saveDeletedSeedIds();
+  }
+  await saveItems();
+}
+
+async function loadItems() {
+  await loadDeletedSeedIds();
+  try {
+    const value = await tripStorage.get(KEY);
+    if (value) {
+      state.items = JSON.parse(value);
+      state.items.forEach(it => { if (!it.photos) it.photos = []; });
+      const existingIds = new Set(state.items.map(it => it.id));
+      const seedToAdd = SEED.filter(s => !existingIds.has(s.id) && !state.deletedSeedIds.includes(s.id));
+      if (seedToAdd.length) {
+        state.items.push(...JSON.parse(JSON.stringify(seedToAdd)));
+        await saveItems();
+        toast(`Added ${seedToAdd.length} new place${seedToAdd.length === 1 ? '' : 's'} to your trip.`);
+      }
+      return;
+    }
+  } catch (e) { console.warn('load failed', e); }
+  try {
+    const oldValue = await tripStorage.get('ireland-trip-v2');
+    if (oldValue) {
+      const oldItems = JSON.parse(oldValue);
+      const userItems = oldItems.filter(it => it.by && it.by !== 'auto');
+      state.items = [...JSON.parse(JSON.stringify(SEED)), ...userItems];
+      await saveItems();
+      if (userItems.length) toast(`Updated to new plan — kept your ${userItems.length} addition${userItems.length === 1 ? '' : 's'}.`);
+      return;
+    }
+  } catch (e) {}
+  state.items = JSON.parse(JSON.stringify(SEED));
+  await saveItems();
+}
+
+async function saveItems() {
+  try { await tripStorage.set(KEY, JSON.stringify(state.items)); }
+  catch (e) {
+    console.error('Save failed', e);
+    if (e && /quota/i.test(e.message || '')) toast('Storage full — try removing some photos.');
+    else toast('Save failed — refresh and check console.');
+  }
+}
+
+function el(tag, attrs = {}, children = []) {
+  const e = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c == null) return;
+    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+function fmtTime(t) {
+  if (!t) return 'Anytime';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+const TYPE_META = { lodging: { icon: '🏠', label: 'Lodging' }, food: { icon: '🍽️', label: 'Food' }, activity: { icon: '⭐', label: 'Activity' }, transport: { icon: '🚗', label: 'Transport' }, note: { icon: '📝', label: 'Note' } };
+
+function renderDayNav() {
+  const nav = document.getElementById('dayNav');
+  nav.innerHTML = '';
+  TRIP_DAYS.forEach(d => {
+    const has = state.items.some(it => it.date === d.date);
+    const tab = el('button', {
+      class: 'day-tab' + (d.date === state.activeDate ? ' active' : '') + (has ? ' has-items' : ''),
+      onclick: () => { state.activeDate = d.date; renderAll(); },
+    }, [
+      el('span', { class: 'day-name' }, d.name),
+      el('span', { class: 'day-num' }, String(parseInt(d.date.slice(-2)))),
+    ]);
+    nav.appendChild(tab);
+  });
+}
+
+function renderItems() {
+  const list = document.getElementById('items');
+  const day = TRIP_DAYS.find(d => d.date === state.activeDate);
+  document.getElementById('dayTitle').innerHTML = day.long.replace(/^([A-Za-z]+)/, '<em>$1</em>');
+  document.getElementById('daySubtitle').textContent = DAY_TAGLINES[state.activeDate] || '';
+  let dayItems = state.items.filter(it => it.date === state.activeDate);
+  if (state.filter !== 'all') dayItems = dayItems.filter(it => it.type === state.filter);
+  dayItems.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+  document.getElementById('dayCount').textContent = `${dayItems.length} item${dayItems.length === 1 ? '' : 's'}`;
+  list.innerHTML = '';
+  if (dayItems.length === 0) {
+    list.appendChild(el('div', { class: 'empty-day' }, [
+      el('p', { class: 'empty-day-quote' }, '"There are no strangers here; only friends you haven\'t yet met."'),
+      el('p', {}, 'Tap the + below or type into the AI bar above to add something.'),
+    ]));
+  }
+  dayItems.forEach(it => list.appendChild(renderItem(it)));
+}
+
+function renderItem(it) {
+  const meta = TYPE_META[it.type] || TYPE_META.note;
+  const item = el('div', { class: 'item' + (it.done ? ' done' : '') });
+  const check = el('button', {
+    class: 'item-check' + (it.done ? ' checked' : ''),
+    onclick: async () => { it.done = !it.done; await saveItems(); renderItems(); },
+  });
+  check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>`;
+  const body = el('div', { class: 'item-body' });
+  body.appendChild(el('div', { class: 'item-time-row' }, [
+    el('span', { class: 'item-time' }, fmtTime(it.time)),
+    el('span', { class: 'item-type-tag ' + it.type }, meta.icon + ' ' + meta.label),
+  ]));
+  body.appendChild(el('div', { class: 'item-title' }, it.title || 'Untitled'));
+  if (it.notes) body.appendChild(el('div', { class: 'item-meta' }, it.notes));
+  const details = [];
+  if (it.location) details.push(detailRow('📍', it.location));
+  if (it.contact) details.push(detailRow('☎', it.contact));
+  if (it.confirmation) details.push(detailRow('#', it.confirmation));
+  if (it.link) {
+    const linkRow = el('span', { class: 'item-detail' });
+    linkRow.appendChild(el('span', {}, '🔗'));
+    linkRow.appendChild(el('a', { href: it.link, target: '_blank', rel: 'noopener' }, it.confirmation ? 'Manage booking' : 'Link'));
+    details.push(linkRow);
+  }
+  if (it.lat && it.lng) {
+    const mapRow = el('span', { class: 'item-detail' });
+    mapRow.appendChild(el('span', {}, '🗺️'));
+    const a = el('a', { href: '#', onclick: (e) => { e.preventDefault(); state.view = 'map'; renderAll(); } }, 'On map');
+    mapRow.appendChild(a);
+    details.push(mapRow);
+  }
+  if (details.length) {
+    const row = el('div', { class: 'item-detail-row' });
+    details.forEach(d => row.appendChild(d));
+    body.appendChild(row);
+  }
+  if (it.photos && it.photos.length) {
+    const ph = el('div', { class: 'item-photos' });
+    it.photos.forEach((p, i) => ph.appendChild(el('img', { src: p.dataUrl, alt: '', onclick: () => openLightbox(it, i) })));
+    body.appendChild(ph);
+  }
+  if (it.by && it.by !== 'auto') {
+    body.appendChild(el('div', { class: 'item-credit' }, [
+      el('span', { class: 'who-avatar' + (it.by === 'Megan' ? ' megan' : '') }, it.by[0]),
+      el('span', {}, 'added by ' + it.by),
+    ]));
+  }
+  const actions = el('div', { class: 'item-actions' });
+  const editBtn = el('button', { class: 'icon-btn', title: 'Edit', onclick: () => openForm(it) });
+  editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+  actions.appendChild(editBtn);
+  const delBtn = el('button', { class: 'icon-btn', title: 'Delete', onclick: async (e) => {
+    e.stopPropagation();
+    if (!confirm('Delete "' + it.title + '"?')) return;
+    await deleteItemById(it.id);
+    renderAll();
+    toast('Deleted.');
+  }});
+  delBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>`;
+  delBtn.style.color = 'var(--berry)';
+  actions.appendChild(delBtn);
+  item.appendChild(check); item.appendChild(body); item.appendChild(actions);
+  return item;
+}
+
+function detailRow(icon, text) { return el('span', { class: 'item-detail' }, [el('span', {}, icon), el('span', {}, text)]); }
+
+let map = null, pinsLayer = null, routesLayer = null;
+const IRELAND_BOUNDS = [[51.3, -10.85], [55.55, -5.15]];
+function inIreland(lat, lng) { return lat >= 51.2 && lat <= 55.7 && lng >= -10.85 && lng <= -5.15; }
+function initMap() {
+  if (map) return;
+  map = L.map('map', {
+    scrollWheelZoom: true,
+    maxBounds: L.latLngBounds(IRELAND_BOUNDS),
+    maxBoundsViscosity: 1.0,
+    minZoom: 7,
+    maxZoom: 14,
+  }).fitBounds(IRELAND_BOUNDS);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://carto.com/">CARTO</a> | © <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+  pinsLayer = L.layerGroup().addTo(map);
+  routesLayer = L.layerGroup().addTo(map);
+  map.on('click', (e) => {
+    if (!state.pickingOnMap) return;
+    document.getElementById('fCoords').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+    state.pickingOnMap = false;
+    document.getElementById('mapContainer')?.classList.remove('picking');
+    document.getElementById('formModal').classList.add('show');
+    toast('Coordinates set.');
+  });
+}
+function pinIcon(type) {
+  return L.divIcon({
+    className: 'leaflet-pin-icon',
+    html: `<div class="map-pin map-pin-${type}"><div class="pin-inner"></div></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -10],
+  });
+}
+function renderMap() {
+  initMap();
+  if (!pinsLayer) return;
+  pinsLayer.clearLayers();
+  const itemsWithCoords = state.items.filter(it => it.lat != null && it.lng != null && inIreland(it.lat, it.lng));
+  itemsWithCoords.forEach(it => {
+    const marker = L.marker([it.lat, it.lng], { icon: pinIcon(it.type) });
+    const day = TRIP_DAYS.find(d => d.date === it.date);
+    const dayLbl = day ? day.label : it.date;
+    marker.bindPopup(
+      `<div class="popup-meta">${dayLbl}${it.time ? ' · ' + fmtTime(it.time) : ''}</div>` +
+      `<h4>${escapeHtml(it.title)}</h4>` +
+      (it.location ? `<div class="popup-loc">📍 ${escapeHtml(it.location)}</div>` : '') +
+      (it.notes ? `<div class="popup-notes">${escapeHtml(it.notes)}</div>` : '') +
+      `<button onclick="window.__editItem('${it.id}')">Edit</button>`
+    );
+    pinsLayer.addLayer(marker);
+  });
+  renderRoutes();
+  setTimeout(() => map && map.invalidateSize(), 100);
+}
+window.__editItem = function(id) { const it = state.items.find(i => i.id === id); if (it) openForm(it); };
+
+function getRouteSegments() {
+  const items = state.items.slice().sort((a, b) =>
+    (a.date + (a.time || '00:00')).localeCompare(b.date + (b.time || '00:00'))
+  );
+  function anchorType(it) {
+    const t = (it.title || '').toLowerCase();
+    if (it.type === 'transport' && /pick.?up/.test(t) && /rental|car/.test(t)) return 'pickup';
+    if (it.type === 'transport' && /return/.test(t) && /rental|car/.test(t)) return 'return';
+    if (it.type === 'lodging' && /check.?in/.test(t)) return 'checkin';
+    if (it.type === 'lodging' && /check.?out/.test(t)) return 'checkout';
+    return null;
+  }
+  const segments = [];
+  let lastDeparture = null;
+  for (const it of items) {
+    const at = anchorType(it);
+    if (!at || it.lat == null || it.lng == null) continue;
+    if (at === 'pickup' || at === 'checkout') {
+      lastDeparture = it;
+    } else if ((at === 'checkin' || at === 'return') && lastDeparture) {
+      const fromTime = lastDeparture.date + (lastDeparture.time || '00:00');
+      const toTime = it.date + (it.time || '23:59');
+      const waypoints = items.filter(x =>
+        x.id !== lastDeparture.id && x.id !== it.id &&
+        x.lat != null && x.lng != null && inIreland(x.lat, x.lng) &&
+        x.type !== 'lodging' && x.type !== 'note' &&
+        (x.date + (x.time || '00:00')) > fromTime &&
+        (x.date + (x.time || '00:00')) < toTime
+      );
+      segments.push({ from: lastDeparture, to: it, waypoints });
+      lastDeparture = null;
+    }
+  }
+  return segments;
+}
+
+const routeCache = new Map();
+async function fetchOsrmRoute(coords) {
+  const key = coords.map(c => `${c.lat.toFixed(4)},${c.lng.toFixed(4)}`).join('|');
+  if (routeCache.has(key)) {
+    const cached = routeCache.get(key);
+    if (cached && typeof cached.then === 'function') return await cached;
+    return cached;
+  }
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords.map(c => `${c.lng},${c.lat}`).join(';')}?overview=full&geometries=geojson`;
+  const promise = (async () => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes || !data.routes.length) throw new Error(data.message || 'no route');
+    return { geometry: data.routes[0].geometry, distance: data.routes[0].distance, duration: data.routes[0].duration };
+  })();
+  routeCache.set(key, promise);
+  try {
+    const result = await promise;
+    routeCache.set(key, result);
+    return result;
+  } catch (e) {
+    routeCache.delete(key);
+    throw e;
+  }
+}
+
+async function renderRoutes() {
+  if (!routesLayer) return;
+  routesLayer.clearLayers();
+  const segments = getRouteSegments();
+  state.routeData = segments.map(seg => ({ from: seg.from, to: seg.to, waypoints: seg.waypoints, distance: null, duration: null, loading: true, polyline: null }));
+  renderRouteSummary();
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const coords = [seg.from, ...seg.waypoints, seg.to].map(it => ({ lat: it.lat, lng: it.lng }));
+    if (coords.length < 2) { state.routeData[i].loading = false; continue; }
+    try {
+      const route = await fetchOsrmRoute(coords);
+      const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      const polyline = L.polyline(latlngs, { color: '#3A5A40', weight: 4, opacity: 0.78, lineCap: 'round', lineJoin: 'round' }).addTo(routesLayer);
+      polyline.bindTooltip(`${(route.distance/1609.34).toFixed(0)} mi · ${formatDuration(route.duration)}`, { sticky: true });
+      state.routeData[i] = { ...state.routeData[i], distance: route.distance, duration: route.duration, polyline, loading: false };
+    } catch (e) {
+      console.error('Route ' + i + ' failed:', e);
+      const ll = coords.map(c => [c.lat, c.lng]);
+      const polyline = L.polyline(ll, { color: '#A0522D', weight: 2, opacity: 0.5, dashArray: '4 4' }).addTo(routesLayer);
+      state.routeData[i] = { ...state.routeData[i], polyline, loading: false, error: e.message || 'route unavailable' };
+    }
+    renderRouteSummary();
+  }
+}
+
+function formatDuration(seconds) {
+  const totalMin = Math.round(seconds / 60);
+  const hr = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  if (hr > 0) return `${hr}h ${min}m`;
+  return `${min}m`;
+}
+
+function renderRouteSummary() {
+  const summary = document.getElementById('routeSummary');
+  if (!summary) return;
+  summary.innerHTML = '';
+  if (!state.routeData || !state.routeData.length) {
+    summary.innerHTML = '<div class="route-empty">Routes appear here once your rental pickup, lodging check-ins, and rental return are set.</div>';
+    return;
+  }
+  state.routeData.forEach((r) => {
+    const card = el('div', { class: 'route-segment', onclick: () => {
+      if (r.polyline && map) { state.view = 'map'; renderAll(); setTimeout(() => map.fitBounds(r.polyline.getBounds(), { padding: [40, 40] }), 100); }
+    }});
+    const head = el('div', { class: 'route-head' });
+    head.appendChild(el('strong', {}, simplifyTitle(r.from.title) + ' → ' + simplifyTitle(r.to.title)));
+    if (r.loading) head.appendChild(el('span', { class: 'route-stats route-loading' }, 'calculating…'));
+    else if (r.distance != null) head.appendChild(el('span', { class: 'route-stats' }, `${(r.distance/1609.34).toFixed(0)} mi · ${formatDuration(r.duration)}`));
+    else head.appendChild(el('span', { class: 'route-stats route-error' }, r.error || 'unavailable'));
+    card.appendChild(head);
+    if (r.waypoints && r.waypoints.length) {
+      card.appendChild(el('div', { class: 'route-via' }, 'via ' + r.waypoints.map(w => simplifyTitle(w.title)).join(' → ')));
+    }
+    summary.appendChild(card);
+  });
+}
+
+function simplifyTitle(t) {
+  return (t || '').replace(/^(Check in|Check out|Pick up rental|Return rental)\s*[—\-]\s*/i, '').replace(/\s*\(.*$/, '').trim();
+}
+function escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+function renderPhotos() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  const allPhotos = [];
+  state.items.forEach(it => (it.photos || []).forEach((p, idx) => allPhotos.push({ photo: p, item: it, idx })));
+  if (!allPhotos.length) {
+    grid.innerHTML = `<div class="photos-empty" style="grid-column: 1 / -1;"><p class="quote">"A thing of beauty is a joy forever."</p><p>No photos yet. Add some to any item — drop them in the upload box and EXIF data fills in automatically.</p></div>`;
+    return;
+  }
+  allPhotos.sort((a, b) => {
+    const ta = a.photo.timestamp || (a.item.date + 'T' + (a.item.time || '00:00'));
+    const tb = b.photo.timestamp || (b.item.date + 'T' + (b.item.time || '00:00'));
+    return ta.localeCompare(tb);
+  });
+  allPhotos.forEach(({photo, item, idx}) => {
+    const card = el('div', { class: 'photo-card', onclick: () => openLightbox(item, idx) });
+    card.appendChild(el('img', { src: photo.dataUrl, alt: '' }));
+    const meta = el('div', { class: 'photo-card-meta' });
+    meta.appendChild(el('div', { class: 'photo-card-title' }, item.title));
+    const sub = el('div', { class: 'photo-card-sub' });
+    if (photo.timestamp) sub.appendChild(el('span', {}, new Date(photo.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })));
+    else { const day = TRIP_DAYS.find(d => d.date === item.date); if (day) sub.appendChild(el('span', {}, day.label)); }
+    if (photo.lat && photo.lng) sub.appendChild(el('span', { class: 'pill' }, '📍 geotagged'));
+    meta.appendChild(sub);
+    card.appendChild(meta);
+    grid.appendChild(card);
+  });
+}
+
+function openLightbox(item, idx) {
+  const photo = item.photos[idx];
+  document.getElementById('lightboxImg').src = photo.dataUrl;
+  document.getElementById('lightboxTitle').textContent = item.title;
+  const bits = [];
+  if (photo.timestamp) bits.push(new Date(photo.timestamp).toLocaleString());
+  if (photo.lat && photo.lng) bits.push(`${photo.lat.toFixed(4)}, ${photo.lng.toFixed(4)}`);
+  if (item.location) bits.push(item.location);
+  document.getElementById('lightboxMeta').textContent = bits.join('  ·  ');
+  document.getElementById('lightbox').classList.add('show');
+}
+document.getElementById('lightboxClose').addEventListener('click', () => document.getElementById('lightbox').classList.remove('show'));
+document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') document.getElementById('lightbox').classList.remove('show'); });
+
+function renderAll() {
+  document.querySelectorAll('.vtab').forEach(t => t.classList.toggle('active', t.dataset.view === state.view));
+  document.getElementById('calendarView').style.display = state.view === 'calendar' ? 'block' : 'none';
+  document.getElementById('mapView').style.display = state.view === 'map' ? 'block' : 'none';
+  document.getElementById('photosView').style.display = state.view === 'photos' ? 'block' : 'none';
+  if (state.view === 'calendar') { renderDayNav(); renderItems(); }
+  else if (state.view === 'map') renderMap();
+  else if (state.view === 'photos') renderPhotos();
+  document.getElementById('statTotal').textContent = state.items.length;
+  document.getElementById('statDone').textContent = state.items.filter(i => i.done).length;
+  let photoCount = 0;
+  state.items.forEach(i => photoCount += (i.photos?.length || 0));
+  document.getElementById('statPhotos').textContent = photoCount;
+}
+
+document.getElementById('viewTabs').addEventListener('click', (e) => {
+  const t = e.target.closest('.vtab');
+  if (!t) return;
+  state.view = t.dataset.view;
+  renderAll();
+});
+
+const formModal = document.getElementById('formModal');
+function openForm(item) {
+  state.editingId = item ? item.id : null;
+  state.formType = item ? item.type : 'activity';
+  state.formPhotos = item ? [...(item.photos || [])] : [];
+  document.getElementById('formTitle').innerHTML = item ? 'Edit <em>this</em>' : 'A new <em>thing</em>';
+  document.getElementById('fTitle').value = item ? item.title : '';
+  document.getElementById('fDate').value = item ? item.date : state.activeDate;
+  document.getElementById('fTime').value = item ? item.time : '';
+  document.getElementById('fLocation').value = item ? item.location : '';
+  document.getElementById('fCoords').value = item && item.lat ? `${item.lat}, ${item.lng}` : '';
+  document.getElementById('fNotes').value = item ? item.notes : '';
+  document.getElementById('fLink').value = item ? item.link : '';
+  document.getElementById('fContact').value = item ? (item.contact || item.confirmation || '') : '';
+  document.getElementById('fCheckoutDate').value = '';
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === state.formType));
+  updateCheckoutRowVisibility();
+  document.getElementById('deleteBtn').style.display = item ? 'inline-flex' : 'none';
+  renderUploadedPhotos();
+  formModal.classList.add('show');
+  setTimeout(() => document.getElementById('fTitle').focus(), 100);
+}
+function updateCheckoutRowVisibility() {
+  // Only show the checkout helper for NEW lodging items (not when editing an existing one)
+  const show = state.formType === 'lodging' && !state.editingId;
+  document.getElementById('fCheckoutRow').style.display = show ? 'flex' : 'none';
+}
+function openFormAtCoords(lat, lng) { openForm(null); document.getElementById('fCoords').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+function closeForm() { formModal.classList.remove('show'); state.editingId = null; state.formPhotos = []; }
+document.getElementById('addBtn').addEventListener('click', () => openForm(null));
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title) { toast('Give it a title.'); return; }
+  const coordsRaw = document.getElementById('fCoords').value.trim();
+  let lat = null, lng = null;
+  if (coordsRaw) {
+    const m = coordsRaw.split(',').map(s => parseFloat(s.trim()));
+    if (m.length === 2 && !isNaN(m[0]) && !isNaN(m[1])) { lat = m[0]; lng = m[1]; }
+  }
+  const data = {
+    title, date: document.getElementById('fDate').value, time: document.getElementById('fTime').value,
+    type: state.formType, location: document.getElementById('fLocation').value.trim(),
+    lat, lng, notes: document.getElementById('fNotes').value.trim(),
+    link: document.getElementById('fLink').value.trim(), contact: document.getElementById('fContact').value.trim(),
+    confirmation: '', done: false, by: state.who, photos: state.formPhotos,
+  };
+  const checkoutDate = (state.formType === 'lodging' && !state.editingId) ? document.getElementById('fCheckoutDate').value : '';
+  if (state.editingId) {
+    const idx = state.items.findIndex(i => i.id === state.editingId);
+    if (idx >= 0) state.items[idx] = { ...state.items[idx], ...data };
+  } else {
+    // For lodging with a checkout date, prefix title with "Check in" so the routing engine recognizes it
+    if (checkoutDate && checkoutDate !== data.date && !/^check\s*(in|out)/i.test(data.title)) {
+      data.title = 'Check in — ' + data.title;
+    }
+    data.id = 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    state.items.push(data);
+    // Auto-create matching check-out
+    if (checkoutDate && checkoutDate !== data.date) {
+      const cleanName = data.title.replace(/^check\s*in\s*[—\-:]?\s*/i, '');
+      state.items.push({
+        ...data,
+        id: data.id + '-out',
+        title: 'Check out — ' + cleanName,
+        date: checkoutDate,
+        time: '',
+        notes: '',
+        photos: [],
+      });
+    }
+  }
+  await saveItems();
+  state.activeDate = data.date;
+  renderAll();
+  closeForm();
+  toast(state.editingId ? 'Updated.' : (checkoutDate ? 'Added check-in & check-out.' : 'Added.'));
+});
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  if (!state.editingId) return;
+  if (!confirm('Delete this item?')) return;
+  await deleteItemById(state.editingId);
+  renderAll();
+  closeForm();
+  toast('Deleted.');
+});
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('show'));
+  state.editingId = null;
+}));
+document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
+document.getElementById('fType').addEventListener('click', e => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn) return;
+  state.formType = btn.dataset.type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b === btn));
+  updateCheckoutRowVisibility();
+});
+document.getElementById('pickOnMapBtn').addEventListener('click', () => {
+  state.pickingOnMap = true;
+  formModal.classList.remove('show');
+  state.view = 'map';
+  renderAll();
+  setTimeout(() => { document.getElementById('mapContainer')?.classList.add('picking'); }, 80);
+  toast('Click anywhere on the map to set the spot.');
+});
+
+const dateSel = document.getElementById('fDate');
+TRIP_DAYS.forEach(d => dateSel.appendChild(el('option', { value: d.date }, d.label)));
+
+const checkoutSel = document.getElementById('fCheckoutDate');
+checkoutSel.appendChild(el('option', { value: '' }, '— same day (no check-out) —'));
+TRIP_DAYS.forEach(d => checkoutSel.appendChild(el('option', { value: d.date }, d.label)));
+
+async function handlePhotoFiles(files) {
+  const upload = document.getElementById('photoUpload');
+  upload.classList.add('processing');
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      let lat = null, lng = null, timestamp = null;
+      try {
+        const exif = await window.exifr.parse(file, { gps: true, pick: ['DateTimeOriginal','CreateDate','GPSLatitude','GPSLongitude','latitude','longitude'] });
+        if (exif) {
+          lat = exif.latitude ?? null;
+          lng = exif.longitude ?? null;
+          const dt = exif.DateTimeOriginal || exif.CreateDate;
+          if (dt) timestamp = (dt instanceof Date) ? dt.toISOString() : new Date(dt).toISOString();
+        }
+      } catch (err) {}
+      const dataUrl = await resizeImage(file, 1200, 0.72);
+      state.formPhotos.push({ id: 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), dataUrl, lat, lng, timestamp, name: file.name });
+    } catch (e) { console.error('Photo failed', e); toast('Couldn\'t process ' + file.name); }
+  }
+  upload.classList.remove('processing');
+  renderUploadedPhotos();
+}
+function resizeImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > h && w > maxDim) { h = h * (maxDim / w); w = maxDim; }
+        else if (h > maxDim) { w = w * (maxDim / h); h = maxDim; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function renderUploadedPhotos() {
+  const cont = document.getElementById('uploadedPhotos');
+  cont.innerHTML = '';
+  state.formPhotos.forEach((p, idx) => {
+    const wrap = el('div', { class: 'uploaded-photo' });
+    wrap.appendChild(el('img', { src: p.dataUrl, alt: '' }));
+    wrap.appendChild(el('button', { class: 'remove', title: 'Remove', onclick: () => { state.formPhotos.splice(idx, 1); renderUploadedPhotos(); } }, '×'));
+    cont.appendChild(wrap);
+  });
+}
+document.getElementById('photoInput').addEventListener('change', (e) => {
+  if (e.target.files.length) handlePhotoFiles(Array.from(e.target.files));
+  e.target.value = '';
+});
+const upload = document.getElementById('photoUpload');
+['dragenter','dragover'].forEach(evt => upload.addEventListener(evt, e => { e.preventDefault(); upload.style.borderColor = 'var(--moss)'; }));
+['dragleave','drop'].forEach(evt => upload.addEventListener(evt, e => { e.preventDefault(); upload.style.borderColor = ''; }));
+upload.addEventListener('drop', e => { if (e.dataTransfer.files.length) handlePhotoFiles(Array.from(e.dataTransfer.files)); });
+
+document.getElementById('filterGroup').addEventListener('click', e => {
+  const c = e.target.closest('.filter-chip');
+  if (!c) return;
+  state.filter = c.dataset.filter;
+  document.querySelectorAll('.filter-chip').forEach(x => x.classList.toggle('active', x === c));
+  renderItems();
+});
+
+document.getElementById('reservationsBtn').addEventListener('click', () => {
+  const RES = state.items.filter(i => i.confirmation);
+  const list = document.getElementById('reservationsList');
+  list.innerHTML = '';
+  RES.sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  RES.forEach(r => {
+    const day = TRIP_DAYS.find(d => d.date === r.date);
+    const card = el('div', { class: 'res-card' });
+    card.appendChild(el('div', { class: 'res-head' }, [
+      el('div', { class: 'res-title' }, r.title),
+      el('div', { class: 'res-date' }, day ? day.label + (r.time ? ' · ' + fmtTime(r.time) : '') : ''),
+    ]));
+    const grid = el('div', { class: 'res-grid' });
+    if (r.location) grid.appendChild(el('div', {}, [el('strong', {}, 'Where'), el('span', {}, r.location)]));
+    if (r.contact) grid.appendChild(el('div', {}, [el('strong', {}, 'Contact'), el('span', {}, r.contact)]));
+    if (r.confirmation) grid.appendChild(el('div', {}, [el('strong', {}, 'Conf.'), el('span', {}, r.confirmation)]));
+    card.appendChild(grid);
+    if (r.notes) card.appendChild(el('p', { style: 'margin-top: 10px; font-size: 13px; color: var(--ink-soft); font-style: italic;' }, r.notes));
+    if (r.link) card.appendChild(el('a', { class: 'manage-btn', href: r.link, target: '_blank', rel: 'noopener' }, '🔗 Manage booking'));
+    list.appendChild(card);
+  });
+  document.getElementById('resModal').classList.add('show');
+});
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if (!confirm('Reset everything to just the original bookings? Anything you or Megan added (including photos) will be wiped, and any deletions will be undone.')) return;
+  state.items = JSON.parse(JSON.stringify(SEED));
+  state.deletedSeedIds = [];
+  await saveItems();
+  await saveDeletedSeedIds();
+  renderAll();
+  toast('Reset to bookings.');
+});
+
+const whoOverlay = document.getElementById('whoOverlay');
+function setWho(name) {
+  state.who = name;
+  localStorage.setItem('ireland-who', name);
+  document.getElementById('whoName').textContent = name;
+  const av = document.getElementById('whoAvatar');
+  av.textContent = name[0];
+  av.classList.toggle('megan', name === 'Megan');
+  whoOverlay.style.display = 'none';
+}
+document.querySelectorAll('.who-opt').forEach(b => b.addEventListener('click', () => setWho(b.dataset.who)));
+document.getElementById('whoPill').addEventListener('click', () => { whoOverlay.style.display = 'grid'; });
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  const stored = localStorage.getItem('anthropic-api-key') || '';
+  document.getElementById('apiKeyInput').value = stored;
+  document.getElementById('settingsModal').classList.add('show');
+});
+document.getElementById('saveKeyBtn').addEventListener('click', () => {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) localStorage.setItem('anthropic-api-key', key);
+  document.getElementById('settingsModal').classList.remove('show');
+  toast(key ? 'API key saved.' : 'No key entered.');
+});
+document.getElementById('clearKeyBtn').addEventListener('click', () => {
+  localStorage.removeItem('anthropic-api-key');
+  document.getElementById('apiKeyInput').value = '';
+  toast('API key removed.');
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ version: KEY, exportedAt: new Date().toISOString(), items: state.items }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ireland-trip-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Exported.');
+});
+
+document.getElementById('importInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.items || !Array.isArray(data.items)) throw new Error('No items array');
+    if (!confirm(`Replace your trip with ${data.items.length} items from this file? Your current data will be overwritten.`)) return;
+    state.items = data.items.map(it => ({ ...it, photos: it.photos || [] }));
+    await saveItems();
+    renderAll();
+    document.getElementById('settingsModal').classList.remove('show');
+    toast(`Imported ${data.items.length} items.`);
+  } catch (err) {
+    console.error('Import failed:', err);
+    toast('Import failed: ' + (err.message || 'invalid file'));
+  }
+  e.target.value = '';
+});
+
+let toastT;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function callClaude(payload) {
+  const apiKey = localStorage.getItem('anthropic-api-key');
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) {
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  }
+  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(payload) });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    if (res.status === 401 || res.status === 403 || /credentials|authentication|api.?key/i.test(errText)) {
+      throw new Error('Need an API key in Chrome — click ⚙ to add one. (Inside Claude.ai it works keyless.)');
+    }
+    throw new Error(`API ${res.status}: ${errText.slice(0, 160)}`);
+  }
+  return res.json();
+}
+
+function buildItinerarySnapshot() {
+  const byDate = {};
+  state.items.forEach(it => { (byDate[it.date] = byDate[it.date] || []).push(it); });
+  const lines = [];
+  TRIP_DAYS.forEach(d => {
+    const dayItems = byDate[d.date];
+    if (!dayItems || !dayItems.length) return;
+    dayItems.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    lines.push(`${d.label}:`);
+    dayItems.forEach(it => {
+      const t = it.time || '—';
+      const loc = it.location ? ` @ ${it.location}` : '';
+      const done = it.done ? ' ✓' : '';
+      lines.push(`  ${t} [${it.type}] ${it.title}${loc}${done}`);
+    });
+  });
+  return lines.join('\n');
+}
+
+function normalizeTitle(s) {
+  return (s || '').toLowerCase()
+    .replace(/^(check in|check out|stop at|visit|lunch at|dinner at|breakfast at|drinks at|pint at|dinner @|brunch at)\s*[—\-:]?\s*/i, '')
+    .replace(/^(the |a |an )/, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function findSimilarExisting(newItem) {
+  const newNorm = normalizeTitle(newItem.title);
+  if (!newNorm || newNorm.length < 3) return null;
+  return state.items.find(it => {
+    if (it.date !== newItem.date) return false;
+    const existingNorm = normalizeTitle(it.title);
+    if (existingNorm === newNorm) return true;
+    if (newNorm.length >= 5 && existingNorm.includes(newNorm)) return true;
+    if (existingNorm.length >= 5 && newNorm.includes(existingNorm)) return true;
+    return false;
+  });
+}
+
+async function aiQuery(text) {
+  const today = new Date().toISOString().slice(0, 10);
+  const sys = `You are an Ireland-trip assistant for an active travel planner that Connor & Megan use during their trip. The trip runs Apr 29 – May 7, 2026. Today is ${today}.
+
+You are in an ONGOING CONVERSATION — prior turns are included in messages. The user can reference earlier exchanges ("the second one", "add it", "what about the other?"). Use chat history for continuity.
+
+The LATEST user turn includes a CURRENT ITINERARY snapshot. That snapshot is the source of truth for what's planned RIGHT NOW. Older turns may reference stale state — rely on the latest snapshot for any decisions.
+
+CRITICAL RULES:
+1. DUPLICATES — if the user asks to add something already on the schedule (same place, same day), DO NOT re-add it. Tell them in the reply ("Already on Apr 30 at 1pm").
+2. CONFLICTS — if a new item would clash with an existing one (same time, geographically impossible jump, double-booked dinner), put a warning in "warnings".
+3. GEOGRAPHIC SANITY — pick the day that fits the trip's geography. Don't put Galway things on a Cork day. If ambiguous, pick the best-fit day from where they're staying.
+4. PURE QUESTIONS — for non-add intents ("what's the best Galway pub?"), just answer in "reply" with empty items.
+5. FOOD DEDUPE — be especially careful with restaurants/bars. "Dinner at Aniar" and "add Aniar" are dups.
+6. CONVERSATIONAL CONTEXT — if the user references a prior reply ("add the second one"), look at your prior turn for what you suggested.
+7. ALWAYS REPLY — even when adding cleanly, give a brief one-liner so the chat thread makes sense ("Added Tig Cóilí to May 6 evening"). Empty replies are only OK if the user's message was unparseable.
+8. LODGING STAYS — when adding a multi-night lodging (e.g., "add a hotel in Killarney for May 4-6"), ALWAYS create TWO separate items in the items array: one "Check in — [Name]" on the arrival date, and one "Check out — [Name]" on the departure date. Both type "lodging". For single-night stays, do the same (check-in on day 1, check-out on day 2).
+9. Keep replies short — 1-3 sentences max.
+
+ALWAYS reply with VALID JSON ONLY (no markdown, no code fences):
+{
+  "reply": "Friendly answer or confirmation",
+  "items": [array of items to add — ONLY non-duplicates],
+  "warnings": [optional array of conflict warnings]
+}
+
+Item shape: {"title": "...", "type": "activity|food|lodging|transport|note", "date": "YYYY-MM-DD", "time": "HH:MM or empty", "location": "...", "lat": number_or_null, "lng": number_or_null, "notes": "1-line tip"}`;
+
+  const itinerarySnapshot = buildItinerarySnapshot();
+  const latestUserContent = `CURRENT ITINERARY:\n${itinerarySnapshot}\n\nUSER TYPED: "${text}"`;
+
+  // Build messages array: prior chat turns (just role+content) + new user turn with itinerary
+  const priorMessages = state.aiChat
+    .filter(t => t.role === 'user' || t.role === 'assistant')
+    .map(({ role, content }) => ({ role, content }));
+  const trimmedPrior = priorMessages.slice(-18); // last 18 messages of context (~9 exchanges)
+  const messages = [...trimmedPrior, { role: 'user', content: latestUserContent }];
+
+  const data = await callClaude({ model: 'claude-sonnet-4-6', max_tokens: 1500, system: sys, messages });
+  const txt = data.content.filter(c => c.type === 'text').map(c => c.text).join('');
+  const start = txt.indexOf('{'), end = txt.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('Claude did not return JSON');
+  const parsed = JSON.parse(txt.slice(start, end + 1));
+  return { items: parsed.items || [], reply: parsed.reply || '', warnings: parsed.warnings || [] };
+}
+
+async function handleAi() {
+  const input = document.getElementById('aiInput'), btn = document.getElementById('aiBtn');
+  const text = input.value.trim();
+  if (!text) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span><span>Thinking…</span>';
+
+  // Push user turn to chat immediately so it shows
+  state.aiChat.push({ role: 'user', content: text });
+  input.value = '';
+  renderChat();
+
+  try {
+    const { items: rawItems, reply, warnings } = await aiQuery(text);
+    const itemsToAdd = [];
+    const skipped = [];
+    rawItems.forEach(it => {
+      const dup = findSimilarExisting(it);
+      if (dup) skipped.push({ proposed: it, existing: dup });
+      else itemsToAdd.push(it);
+    });
+    itemsToAdd.forEach(it => state.items.push({
+      id: 'ai-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      date: it.date || state.activeDate, time: it.time || '', title: it.title || 'Untitled',
+      type: it.type || 'activity', location: it.location || '',
+      lat: typeof it.lat === 'number' ? it.lat : null, lng: typeof it.lng === 'number' ? it.lng : null,
+      notes: it.notes || '', link: '', contact: '', confirmation: '', done: false, by: state.who, photos: [],
+    }));
+    if (itemsToAdd.length) await saveItems();
+
+    let assistantContent = reply;
+    if (!assistantContent && itemsToAdd.length) assistantContent = `Added: ${itemsToAdd.map(i => i.title).join(', ')}.`;
+    if (!assistantContent && skipped.length) assistantContent = 'Already on the schedule.';
+    if (!assistantContent) assistantContent = 'OK.';
+
+    state.aiChat.push({
+      role: 'assistant',
+      content: assistantContent,
+      warnings: warnings.length ? warnings : undefined,
+      skipped: skipped.length ? skipped.map(s => ({ existingTitle: s.existing.title, existingDate: s.existing.date, existingTime: s.existing.time })) : undefined,
+    });
+    if (state.aiChat.length > 30) state.aiChat = state.aiChat.slice(-30);
+    await saveChat();
+
+    if (itemsToAdd.length) renderAll();
+    else renderChat();
+    if (itemsToAdd.length) {
+      const skipNote = skipped.length ? ` (skipped ${skipped.length} dup)` : '';
+      toast(`Added ${itemsToAdd.length} item${itemsToAdd.length === 1 ? '' : 's'}${skipNote}.`);
+    }
+  } catch (e) {
+    console.error('AI failed:', e);
+    state.aiChat.push({ role: 'assistant', content: '⚠ ' + (e.message || 'Something went wrong.'), error: true });
+    await saveChat();
+    renderChat();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>Add</span>';
+  }
+}
+
+function renderChat() {
+  let box = document.getElementById('aiReply');
+  if (!state.aiChat || !state.aiChat.length) {
+    if (box) box.classList.remove('show');
+    return;
+  }
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'aiReply';
+    box.className = 'ai-reply';
+    document.querySelector('.ai-bar').after(box);
+  }
+  box.innerHTML = '';
+
+  const header = el('div', { class: 'ai-reply-header' });
+  header.appendChild(el('span', { class: 'ai-reply-title' }, '✦ Chat with Claude'));
+  header.appendChild(el('span', { class: 'ai-reply-count' }, `${state.aiChat.length} message${state.aiChat.length === 1 ? '' : 's'} in context`));
+  header.appendChild(el('button', { class: 'ai-reply-clear', onclick: clearChat }, '↺ New chat'));
+  box.appendChild(header);
+
+  const thread = el('div', { class: 'ai-reply-thread' });
+  state.aiChat.forEach(turn => {
+    const msg = el('div', { class: `msg msg-${turn.role}${turn.error ? ' msg-error' : ''}` });
+    msg.appendChild(el('div', { class: 'msg-text' }, turn.content));
+    if (turn.warnings && turn.warnings.length) {
+      turn.warnings.forEach(w => {
+        msg.appendChild(el('div', { class: 'msg-warning' }, '⚠ ' + w));
+      });
+    }
+    if (turn.skipped && turn.skipped.length) {
+      turn.skipped.forEach(s => {
+        const dayLbl = TRIP_DAYS.find(d => d.date === s.existingDate)?.label || s.existingDate;
+        const timeStr = s.existingTime ? ' at ' + fmtTime(s.existingTime) : '';
+        msg.appendChild(el('div', { class: 'msg-dup' }, `↺ "${s.existingTitle}" already on ${dayLbl}${timeStr}`));
+      });
+    }
+    thread.appendChild(msg);
+  });
+  box.appendChild(thread);
+  box.classList.add('show');
+  setTimeout(() => { thread.scrollTop = thread.scrollHeight; }, 50);
+}
+
+async function clearChat() {
+  if (state.aiChat.length && !confirm('Clear chat history? Claude will forget everything you discussed.')) return;
+  state.aiChat = [];
+  await saveChat();
+  renderChat();
+  toast('Chat cleared.');
+}
+
+document.getElementById('aiBtn').addEventListener('click', handleAi);
+document.getElementById('aiInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAi(); });
+
+async function parseBooking(text) {
+  const sys = `You extract structured booking details from confirmation emails or messages. Return ONLY valid JSON, no prose, no code fences.`;
+  const user = `Parse this booking confirmation. The user is on a trip to Ireland Apr 29 – May 7, 2026.
+
+CONFIRMATION TEXT:
+"""
+${text}
+"""
+
+Return ONLY JSON:
+{"title":"Property/restaurant/event name only — DO NOT include 'Check in —' prefix, the app adds that automatically","type":"lodging|food|activity|transport","date":"YYYY-MM-DD (start/check-in/arrival date)","checkoutDate":"YYYY-MM-DD or null — the departure date for multi-night stays, null otherwise","time":"HH:MM (24h, the start time if specified, else empty)","location":"Address or area","lat":number_or_null,"lng":number_or_null,"notes":"Useful detail like 'X nights' or special instructions","link":"Booking management URL if present, else the property's website","contact":"Phone or email if present","confirmation":"Confirmation/reservation/booking number"}
+
+For multi-night lodging stays, set checkoutDate to the departure date. For single-night stays, single events, or non-lodging items, set checkoutDate to null.`;
+  const data = await callClaude({ model: 'claude-sonnet-4-6', max_tokens: 1024, system: sys, messages: [{ role: 'user', content: user }] });
+  const txt = data.content.filter(c => c.type === 'text').map(c => c.text).join('');
+  const start = txt.indexOf('{'), end = txt.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON in response');
+  return JSON.parse(txt.slice(start, end + 1));
+}
+
+document.getElementById('pasteBtn').addEventListener('click', () => {
+  document.getElementById('pasteText').value = '';
+  document.getElementById('parsedPreview').style.display = 'none';
+  document.getElementById('addParsedBtn').style.display = 'none';
+  document.getElementById('parseBtn').style.display = 'inline-flex';
+  state.parsedItem = null;
+  document.getElementById('pasteModal').classList.add('show');
+  setTimeout(() => document.getElementById('pasteText').focus(), 100);
+});
+
+document.getElementById('parseBtn').addEventListener('click', async () => {
+  const text = document.getElementById('pasteText').value.trim();
+  if (!text) { toast('Paste something first.'); return; }
+  const btn = document.getElementById('parseBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Parsing…';
+  try {
+    const parsed = await parseBooking(text);
+    state.parsedItem = parsed;
+    const preview = document.getElementById('parsedPreview');
+    preview.innerHTML = '';
+    preview.appendChild(el('h4', {}, parsed.title || 'Untitled booking'));
+    const fields = [
+      ['Type', (TYPE_META[parsed.type]?.icon || '') + ' ' + (TYPE_META[parsed.type]?.label || parsed.type || '—')],
+      ['Date', parsed.date ? (TRIP_DAYS.find(d => d.date === parsed.date)?.label || parsed.date) + (parsed.time ? ' · ' + fmtTime(parsed.time) : '') : '—'],
+    ];
+    if (parsed.checkoutDate) {
+      fields.push(['Check out', TRIP_DAYS.find(d => d.date === parsed.checkoutDate)?.label || parsed.checkoutDate]);
+    }
+    fields.push(
+      ['Where', parsed.location || '—'],
+      ['Contact', parsed.contact || '—'],
+      ['Conf.', parsed.confirmation || '—'],
+      ['Notes', parsed.notes || '—'],
+    );
+    fields.forEach(([k, v]) => preview.appendChild(el('div', { class: 'ppair' }, [el('strong', {}, k), el('span', {}, v)])));
+    if (parsed.link) {
+      const linkPair = el('div', { class: 'ppair' }, [el('strong', {}, 'Link')]);
+      linkPair.appendChild(el('a', { href: parsed.link, target: '_blank', style: 'color: var(--moss); word-break: break-all;' }, parsed.link.slice(0, 60) + (parsed.link.length > 60 ? '…' : '')));
+      preview.appendChild(linkPair);
+    }
+    preview.style.display = 'block';
+    document.getElementById('addParsedBtn').style.display = 'inline-flex';
+    btn.style.display = 'none';
+  } catch (e) { console.error('Parse failed:', e); toast('Parse failed: ' + (e.message || 'unknown')); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0L13.5 9L22.5 10.5L13.5 12L12 21L10.5 12L1.5 10.5L10.5 9L12 0Z"/></svg>Parse with AI'; }
+});
+
+document.getElementById('addParsedBtn').addEventListener('click', async () => {
+  const p = state.parsedItem;
+  if (!p) return;
+  const baseId = 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  const cleanTitle = (p.title || 'Untitled').replace(/^check\s*(in|out)\s*[—\-:]?\s*/i, '');
+  const isMultiNightStay = p.type === 'lodging' && p.checkoutDate && p.checkoutDate !== p.date;
+  const checkin = {
+    id: baseId,
+    date: p.date || state.activeDate, time: p.time || '',
+    title: isMultiNightStay ? ('Check in — ' + cleanTitle) : (p.title || 'Untitled'),
+    type: p.type || 'activity',
+    location: p.location || '',
+    lat: typeof p.lat === 'number' ? p.lat : null, lng: typeof p.lng === 'number' ? p.lng : null,
+    notes: p.notes || '', link: p.link || '', contact: p.contact || '', confirmation: p.confirmation || '',
+    done: false, by: state.who, photos: [],
+  };
+  state.items.push(checkin);
+  if (isMultiNightStay) {
+    state.items.push({
+      ...checkin,
+      id: baseId + '-out',
+      title: 'Check out — ' + cleanTitle,
+      date: p.checkoutDate,
+      time: '',
+      notes: '',
+      photos: [],
+    });
+  }
+  await saveItems();
+  if (p.date) state.activeDate = p.date;
+  renderAll();
+  document.getElementById('pasteModal').classList.remove('show');
+  state.parsedItem = null;
+  toast(isMultiNightStay ? 'Booking added — check-in & check-out.' : 'Booking added.');
+});
+
+(async function init() {
+  await loadItems();
+  await loadChat();
+  const saved = localStorage.getItem('ireland-who');
+  if (saved) setWho(saved);
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = TRIP_DAYS.find(d => d.date >= today) || TRIP_DAYS[1];
+  state.activeDate = upcoming.date;
+  renderAll();
+  renderChat();
+})();
+</script>
+</body>
+</html>
