@@ -395,6 +395,23 @@
         <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off">
       </div>
       <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>GitHub Gist sync.</strong> Real cross-device sync between you and Megan via a private Gist. Changes propagate within ~30 seconds. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Eire%2026" target="_blank" style="color: var(--moss);">Create a token →</a> (only check the <em>gist</em> scope, give it a long expiration).</p>
+        <div class="form-row" style="margin-top: 10px;">
+          <label>GitHub Personal Access Token</label>
+          <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <label>Gist ID <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(leave blank to create a new one — share the ID with Megan)</span></label>
+          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off">
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" id="gistConnectBtn">Connect & sync</button>
+          <button class="btn" id="gistSyncBtn" style="display: none;">Sync now</button>
+          <button class="btn" id="gistDisconnectBtn" style="color: var(--berry); display: none;">Disconnect</button>
+          <span id="gistStatus" style="font-size: 12px; color: var(--ink-faint); margin-left: auto;"></span>
+        </div>
+      </div>
+      <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
         <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>Backup & restore.</strong> Export the whole trip as a JSON file you can save to your computer, email to yourself, or share with Megan. Import it later to restore everything.</p>
         <div style="display: flex; gap: 8px; margin-top: 10px;">
           <button class="btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export JSON</button>
@@ -624,7 +641,7 @@ async function loadChat() {
 }
 
 async function saveChat() {
-  try { await tripStorage.set(CHAT_KEY, JSON.stringify(state.aiChat)); } catch (e) {}
+  try { await tripStorage.set(CHAT_KEY, JSON.stringify(state.aiChat)); scheduleSync(); } catch (e) {}
 }
 
 async function loadDeletedSeedIds() {
@@ -646,6 +663,171 @@ async function deleteItemById(id) {
     await saveDeletedSeedIds();
   }
   await saveItems();
+}
+
+// === GITHUB GIST SYNC ===
+const GIST_FILENAME = 'eire-26-trip.json';
+let syncDebounce = null;
+let syncing = false;
+let lastSyncAt = null;
+let lastSyncBy = null;
+let lastSyncError = null;
+
+function getGistToken() { return localStorage.getItem('gist-token') || ''; }
+function setGistToken(t) { if (t) localStorage.setItem('gist-token', t); else localStorage.removeItem('gist-token'); }
+function getGistId() { return localStorage.getItem('gist-id') || ''; }
+function setGistId(id) { if (id) localStorage.setItem('gist-id', id); else localStorage.removeItem('gist-id'); }
+function syncEnabled() { return !!(getGistToken() && getGistId()); }
+
+function buildSyncPayload() {
+  return {
+    version: 1,
+    syncedAt: new Date().toISOString(),
+    syncedBy: state.who || 'unknown',
+    items: state.items,
+    deletedItemIds: state.deletedSeedIds,
+    aiChat: state.aiChat,
+  };
+}
+
+function mergeRemote(remote) {
+  if (!remote || !Array.isArray(remote.items)) return false;
+  let changed = false;
+  // Union of deleted IDs
+  const localDel = new Set(state.deletedSeedIds || []);
+  const remoteDel = new Set(remote.deletedItemIds || []);
+  const allDel = new Set([...localDel, ...remoteDel]);
+  if (allDel.size !== localDel.size) {
+    state.deletedSeedIds = [...allDel].filter(id => SEED.some(s => s.id === id));
+    saveDeletedSeedIds();
+    changed = true;
+  }
+  // Merge items: id keyed, newer modifiedAt wins, exclude deleted
+  const localById = new Map(state.items.map(it => [it.id, it]));
+  const remoteById = new Map(remote.items.map(it => [it.id, it]));
+  const allIds = new Set([...localById.keys(), ...remoteById.keys()]);
+  const merged = [];
+  for (const id of allIds) {
+    if (allDel.has(id)) { changed = true; continue; }
+    const local = localById.get(id);
+    const remoteItem = remoteById.get(id);
+    if (!local) { merged.push(remoteItem); changed = true; continue; }
+    if (!remoteItem) { merged.push(local); continue; }
+    const lm = local.modifiedAt || 0;
+    const rm = remoteItem.modifiedAt || 0;
+    if (rm > lm) { merged.push(remoteItem); changed = true; }
+    else merged.push(local);
+  }
+  // Order doesn't matter since we sort on render
+  if (changed) state.items = merged;
+  // Chat: merge by appending unique-by-content turns. Simpler: take whichever has more messages.
+  if (Array.isArray(remote.aiChat) && remote.aiChat.length > (state.aiChat || []).length) {
+    state.aiChat = remote.aiChat;
+    saveChat();
+    changed = true;
+  }
+  return changed;
+}
+
+async function gistApi(method, path, body) {
+  const token = getGistToken();
+  if (!token) throw new Error('No GitHub token');
+  const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+  if (body) headers['Content-Type'] = 'application/json';
+  const res = await fetch('https://api.github.com' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`Gist ${method} ${res.status}: ${txt.slice(0, 140)}`);
+  }
+  return res.json();
+}
+
+async function gistPull() {
+  const id = getGistId();
+  if (!id) return null;
+  const data = await gistApi('GET', '/gists/' + id);
+  const file = data.files && data.files[GIST_FILENAME];
+  if (!file || !file.content) return null;
+  return JSON.parse(file.content);
+}
+
+async function gistPush() {
+  const id = getGistId();
+  const payload = buildSyncPayload();
+  const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(payload) } } };
+  if (id) {
+    await gistApi('PATCH', '/gists/' + id, body);
+    return id;
+  } else {
+    body.description = "Éire '26 — Connor & Megan trip data";
+    body.public = false;
+    const res = await gistApi('POST', '/gists', body);
+    setGistId(res.id);
+    return res.id;
+  }
+}
+
+async function syncNow(opts = {}) {
+  if (syncing) return;
+  if (!getGistToken()) return;
+  syncing = true;
+  updateGistStatus('syncing');
+  try {
+    if (getGistId()) {
+      const remote = await gistPull();
+      if (remote) {
+        const changed = mergeRemote(remote);
+        if (changed) {
+          await tripStorage.set(KEY, JSON.stringify(state.items));
+          renderAll();
+        }
+        if (remote.syncedBy) lastSyncBy = remote.syncedBy;
+      }
+    }
+    await gistPush();
+    lastSyncAt = new Date();
+    lastSyncError = null;
+    updateGistStatus('ok');
+    if (opts.toast) toast('Synced.');
+  } catch (e) {
+    console.error('Sync failed:', e);
+    lastSyncError = e.message || 'unknown';
+    updateGistStatus('error');
+    if (opts.toast) toast('Sync failed: ' + lastSyncError);
+  } finally {
+    syncing = false;
+  }
+}
+
+function scheduleSync() {
+  if (syncing) return;
+  if (!syncEnabled()) return;
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(() => syncNow(), 1500);
+}
+
+function updateGistStatus(state) {
+  const el = document.getElementById('gistStatus');
+  if (!el) return;
+  if (state === 'syncing') { el.textContent = '↻ syncing…'; el.style.color = 'var(--amber)'; }
+  else if (state === 'ok') {
+    const ago = lastSyncAt ? humanAgo(lastSyncAt) : 'just now';
+    const by = lastSyncBy && lastSyncBy !== state.who ? ` by ${lastSyncBy}` : '';
+    el.textContent = `✓ synced ${ago}${by}`;
+    el.style.color = 'var(--moss)';
+  }
+  else if (state === 'error') { el.textContent = '⚠ ' + (lastSyncError || 'sync failed'); el.style.color = 'var(--berry)'; }
+  else if (state === 'idle') { el.textContent = ''; }
+}
+
+function humanAgo(date) {
+  const sec = Math.round((Date.now() - date.getTime()) / 1000);
+  if (sec < 5) return 'just now';
+  if (sec < 60) return sec + 's ago';
+  const min = Math.round(sec / 60);
+  if (min < 60) return min + 'm ago';
+  const hr = Math.round(min / 60);
+  return hr + 'h ago';
 }
 
 async function loadItems() {
@@ -681,7 +863,10 @@ async function loadItems() {
 }
 
 async function saveItems() {
-  try { await tripStorage.set(KEY, JSON.stringify(state.items)); }
+  try {
+    await tripStorage.set(KEY, JSON.stringify(state.items));
+    scheduleSync();
+  }
   catch (e) {
     console.error('Save failed', e);
     if (e && /quota/i.test(e.message || '')) toast('Storage full — try removing some photos.');
@@ -753,7 +938,7 @@ function renderItem(it) {
   const item = el('div', { class: 'item' + (it.done ? ' done' : '') });
   const check = el('button', {
     class: 'item-check' + (it.done ? ' checked' : ''),
-    onclick: async () => { it.done = !it.done; await saveItems(); renderItems(); },
+    onclick: async () => { it.done = !it.done; it.modifiedAt = Date.now(); await saveItems(); renderItems(); },
   });
   check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>`;
   const body = el('div', { class: 'item-body' });
@@ -1112,7 +1297,7 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
     type: state.formType, location: document.getElementById('fLocation').value.trim(),
     lat, lng, notes: document.getElementById('fNotes').value.trim(),
     link: document.getElementById('fLink').value.trim(), contact: document.getElementById('fContact').value.trim(),
-    confirmation: '', done: false, by: state.who, photos: state.formPhotos,
+    confirmation: '', done: false, by: state.who, photos: state.formPhotos, modifiedAt: Date.now(),
   };
   const checkoutDate = (state.formType === 'lodging' && !state.editingId) ? document.getElementById('fCheckoutDate').value : '';
   if (state.editingId) {
@@ -1300,10 +1485,67 @@ document.querySelectorAll('.who-opt').forEach(b => b.addEventListener('click', (
 document.getElementById('whoPill').addEventListener('click', () => { whoOverlay.style.display = 'grid'; });
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  const stored = localStorage.getItem('anthropic-api-key') || '';
-  document.getElementById('apiKeyInput').value = stored;
+  document.getElementById('apiKeyInput').value = localStorage.getItem('anthropic-api-key') || '';
+  document.getElementById('gistTokenInput').value = getGistToken();
+  document.getElementById('gistIdInput').value = getGistId();
+  refreshGistButtons();
+  if (lastSyncAt) updateGistStatus('ok');
+  else if (lastSyncError) updateGistStatus('error');
+  else updateGistStatus('idle');
   document.getElementById('settingsModal').classList.add('show');
 });
+
+function refreshGistButtons() {
+  const connected = syncEnabled();
+  document.getElementById('gistSyncBtn').style.display = connected ? 'inline-flex' : 'none';
+  document.getElementById('gistDisconnectBtn').style.display = connected ? 'inline-flex' : 'none';
+  document.getElementById('gistConnectBtn').textContent = connected ? 'Update credentials' : 'Connect & sync';
+}
+
+document.getElementById('gistConnectBtn').addEventListener('click', async () => {
+  const token = document.getElementById('gistTokenInput').value.trim();
+  const id = document.getElementById('gistIdInput').value.trim();
+  if (!token) { toast('Paste a GitHub token first.'); return; }
+  setGistToken(token);
+  setGistId(id);
+  const btn = document.getElementById('gistConnectBtn');
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  try {
+    if (!id) {
+      // Create new gist by pushing current state
+      await gistPush();
+      const newId = getGistId();
+      document.getElementById('gistIdInput').value = newId;
+      toast('Gist created — share this ID with Megan: ' + newId);
+      lastSyncAt = new Date();
+      updateGistStatus('ok');
+    } else {
+      await syncNow({ toast: true });
+    }
+    refreshGistButtons();
+  } catch (e) {
+    toast('Connect failed: ' + e.message);
+    setGistToken(''); // unset bad token
+  } finally {
+    btn.disabled = false;
+    refreshGistButtons();
+  }
+});
+
+document.getElementById('gistSyncBtn').addEventListener('click', () => syncNow({ toast: true }));
+
+document.getElementById('gistDisconnectBtn').addEventListener('click', () => {
+  if (!confirm('Disconnect from Gist sync? Your data stays on this device. The Gist itself stays on GitHub — you can reconnect later by pasting the same Gist ID.')) return;
+  setGistToken('');
+  setGistId('');
+  document.getElementById('gistTokenInput').value = '';
+  document.getElementById('gistIdInput').value = '';
+  lastSyncAt = null; lastSyncBy = null; lastSyncError = null;
+  refreshGistButtons();
+  updateGistStatus('idle');
+  toast('Disconnected.');
+});
+
 document.getElementById('saveKeyBtn').addEventListener('click', () => {
   const key = document.getElementById('apiKeyInput').value.trim();
   if (key) localStorage.setItem('anthropic-api-key', key);
@@ -1486,7 +1728,7 @@ async function handleAi() {
       date: it.date || state.activeDate, time: it.time || '', title: it.title || 'Untitled',
       type: it.type || 'activity', location: it.location || '',
       lat: typeof it.lat === 'number' ? it.lat : null, lng: typeof it.lng === 'number' ? it.lng : null,
-      notes: it.notes || '', link: '', contact: '', confirmation: '', done: false, by: state.who, photos: [],
+      notes: it.notes || '', link: '', contact: '', confirmation: '', done: false, by: state.who, photos: [], modifiedAt: Date.now(),
     }));
     if (itemsToAdd.length) await saveItems();
 
@@ -1657,7 +1899,7 @@ document.getElementById('addParsedBtn').addEventListener('click', async () => {
     location: p.location || '',
     lat: typeof p.lat === 'number' ? p.lat : null, lng: typeof p.lng === 'number' ? p.lng : null,
     notes: p.notes || '', link: p.link || '', contact: p.contact || '', confirmation: p.confirmation || '',
-    done: false, by: state.who, photos: [],
+    done: false, by: state.who, photos: [], modifiedAt: Date.now(),
   };
   state.items.push(checkin);
   if (isMultiNightStay) {
@@ -1689,6 +1931,12 @@ document.getElementById('addParsedBtn').addEventListener('click', async () => {
   state.activeDate = upcoming.date;
   renderAll();
   renderChat();
+  // Pull from Gist if configured (after initial render so user sees something fast)
+  if (syncEnabled()) {
+    setTimeout(() => syncNow(), 500);
+    // Periodic poll every 30s for incoming changes
+    setInterval(() => { if (syncEnabled() && !syncing) syncNow(); }, 30000);
+  }
 })();
 </script>
 </body>
