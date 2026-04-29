@@ -402,24 +402,24 @@
         </div>
       </div>
       <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
-        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>GitHub Gist sync.</strong> Real cross-device sync between you and Megan via a private Gist. Changes propagate within ~30 seconds. <a href="https://github.com/settings/tokens/new?scopes=gist&description=Eire%2026" target="_blank" style="color: var(--moss);">Create a token →</a> (only check the <em>gist</em> scope, give it a long expiration).</p>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 6px;"><strong>Cloud sync (JSONBin).</strong> Real cross-device sync between you, Megan, and any other device. Changes propagate within ~30 seconds. <a href="https://jsonbin.io/login" target="_blank" style="color: var(--moss);">Sign up free →</a> then copy your <strong>X-MASTER-KEY</strong> from the dashboard.</p>
         <div class="form-row" style="margin-top: 10px;">
-          <label>GitHub Personal Access Token</label>
+          <label>JSONBin Master Key</label>
           <div class="key-input-wrap">
-            <input type="password" id="gistTokenInput" placeholder="ghp_…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
-            <button type="button" class="key-show-btn" data-target="gistTokenInput" aria-label="Show/hide">👁</button>
+            <input type="password" id="binKeyInput" placeholder="$2a$10$…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+            <button type="button" class="key-show-btn" data-target="binKeyInput" aria-label="Show/hide">👁</button>
           </div>
         </div>
         <div class="form-row">
-          <label>Gist ID <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(leave blank to create a new one — share the ID with Megan)</span></label>
-          <input type="text" id="gistIdInput" placeholder="e.g. 1a2b3c4d5e6f…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+          <label>Bin ID <span style="color: var(--ink-faint); text-transform: none; letter-spacing: 0;">(leave blank to create a new one — share with Megan)</span></label>
+          <input type="text" id="binIdInput" placeholder="e.g. 654a3b2c1d…" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
         </div>
         <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="gistConnectBtn">Connect & sync</button>
-          <button class="btn" id="gistVerifyBtn">Verify token</button>
-          <button class="btn" id="gistSyncBtn" style="display: none;">Sync now</button>
-          <button class="btn" id="gistDisconnectBtn" style="color: var(--berry); display: none;">Disconnect</button>
-          <span id="gistStatus" style="font-size: 12px; color: var(--ink-faint); margin-left: auto;"></span>
+          <button class="btn btn-primary" id="binConnectBtn">Connect & sync</button>
+          <button class="btn" id="binVerifyBtn">Verify key</button>
+          <button class="btn" id="binSyncBtn" style="display: none;">Sync now</button>
+          <button class="btn" id="binDisconnectBtn" style="color: var(--berry); display: none;">Disconnect</button>
+          <span id="binStatus" style="font-size: 12px; color: var(--ink-faint); margin-left: auto;"></span>
         </div>
       </div>
       <div style="border-top: 1px solid var(--border-soft); margin-top: 18px; padding-top: 18px;">
@@ -676,19 +676,19 @@ async function deleteItemById(id) {
   await saveItems();
 }
 
-// === GITHUB GIST SYNC ===
-const GIST_FILENAME = 'eire-26-trip.json';
+// === JSONBIN CLOUD SYNC ===
+const JSONBIN_API = 'https://api.jsonbin.io/v3';
 let syncDebounce = null;
 let syncing = false;
 let lastSyncAt = null;
 let lastSyncBy = null;
 let lastSyncError = null;
 
-function getGistToken() { return (localStorage.getItem('gist-token') || '').trim(); }
-function setGistToken(t) { if (t) localStorage.setItem('gist-token', t.trim()); else localStorage.removeItem('gist-token'); }
-function getGistId() { return (localStorage.getItem('gist-id') || '').trim(); }
-function setGistId(id) { if (id) localStorage.setItem('gist-id', id.trim()); else localStorage.removeItem('gist-id'); }
-function syncEnabled() { return !!(getGistToken() && getGistId()); }
+function getBinKey() { return (localStorage.getItem('jsonbin-key') || '').trim(); }
+function setBinKey(k) { if (k) localStorage.setItem('jsonbin-key', k.trim()); else localStorage.removeItem('jsonbin-key'); }
+function getBinId() { return (localStorage.getItem('jsonbin-id') || '').trim(); }
+function setBinId(id) { if (id) localStorage.setItem('jsonbin-id', id.trim()); else localStorage.removeItem('jsonbin-id'); }
+function syncEnabled() { return !!(getBinKey() && getBinId()); }
 
 function buildSyncPayload() {
   return {
@@ -704,7 +704,6 @@ function buildSyncPayload() {
 function mergeRemote(remote) {
   if (!remote || !Array.isArray(remote.items)) return false;
   let changed = false;
-  // Union of deleted IDs
   const localDel = new Set(state.deletedSeedIds || []);
   const remoteDel = new Set(remote.deletedItemIds || []);
   const allDel = new Set([...localDel, ...remoteDel]);
@@ -713,7 +712,6 @@ function mergeRemote(remote) {
     saveDeletedSeedIds();
     changed = true;
   }
-  // Merge items: id keyed, newer modifiedAt wins, exclude deleted
   const localById = new Map(state.items.map(it => [it.id, it]));
   const remoteById = new Map(remote.items.map(it => [it.id, it]));
   const allIds = new Set([...localById.keys(), ...remoteById.keys()]);
@@ -729,9 +727,7 @@ function mergeRemote(remote) {
     if (rm > lm) { merged.push(remoteItem); changed = true; }
     else merged.push(local);
   }
-  // Order doesn't matter since we sort on render
   if (changed) state.items = merged;
-  // Chat: merge by appending unique-by-content turns. Simpler: take whichever has more messages.
   if (Array.isArray(remote.aiChat) && remote.aiChat.length > (state.aiChat || []).length) {
     state.aiChat = remote.aiChat;
     saveChat();
@@ -740,55 +736,51 @@ function mergeRemote(remote) {
   return changed;
 }
 
-async function gistApi(method, path, body) {
-  const token = getGistToken();
-  if (!token) throw new Error('No GitHub token');
-  const headers = { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' };
+async function binApi(method, path, body, extraHeaders) {
+  const key = getBinKey();
+  if (!key) throw new Error('No JSONBin master key');
+  const headers = { 'X-Master-Key': key };
   if (body) headers['Content-Type'] = 'application/json';
-  const res = await fetch('https://api.github.com' + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (extraHeaders) Object.assign(headers, extraHeaders);
+  const res = await fetch(JSONBIN_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
-    if (res.status === 401) throw new Error('GitHub 401: ' + txt.slice(0, 200));
-    if (res.status === 404 && path.startsWith('/gists/')) throw new Error('Gist not found. Check the Gist ID, or create a new one (leave Gist ID empty + Connect).');
-    if (res.status === 403) throw new Error('GitHub 403: ' + txt.slice(0, 200) + ' — token might be missing the gist scope.');
-    throw new Error(`Gist ${method} ${res.status}: ${txt.slice(0, 200)}`);
+    if (res.status === 401) throw new Error('JSONBin 401 Unauthorized: ' + txt.slice(0, 200));
+    if (res.status === 404) throw new Error('Bin not found. Check the Bin ID, or leave it blank to create a new one.');
+    throw new Error(`JSONBin ${method} ${res.status}: ${txt.slice(0, 200)}`);
   }
   return res.json();
 }
 
-async function gistPull() {
-  const id = getGistId();
+async function binPull() {
+  const id = getBinId();
   if (!id) return null;
-  const data = await gistApi('GET', '/gists/' + id);
-  const file = data.files && data.files[GIST_FILENAME];
-  if (!file || !file.content) return null;
-  return JSON.parse(file.content);
+  const data = await binApi('GET', '/b/' + id + '/latest');
+  return data.record;
 }
 
-async function gistPush() {
-  const id = getGistId();
+async function binPush() {
+  const id = getBinId();
   const payload = buildSyncPayload();
-  const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(payload) } } };
   if (id) {
-    await gistApi('PATCH', '/gists/' + id, body);
+    await binApi('PUT', '/b/' + id, payload);
     return id;
   } else {
-    body.description = "Éire '26 — Connor & Megan trip data";
-    body.public = false;
-    const res = await gistApi('POST', '/gists', body);
-    setGistId(res.id);
-    return res.id;
+    const res = await binApi('POST', '/b', payload, { 'X-Bin-Private': 'true', 'X-Bin-Name': "Eire 26 - Connor & Megan trip" });
+    const newId = res.metadata && res.metadata.id;
+    if (newId) setBinId(newId);
+    return newId;
   }
 }
 
 async function syncNow(opts = {}) {
   if (syncing) return;
-  if (!getGistToken()) return;
+  if (!getBinKey()) return;
   syncing = true;
-  updateGistStatus('syncing');
+  updateSyncStatus('syncing');
   try {
-    if (getGistId()) {
-      const remote = await gistPull();
+    if (getBinId()) {
+      const remote = await binPull();
       if (remote) {
         const changed = mergeRemote(remote);
         if (changed) {
@@ -798,15 +790,15 @@ async function syncNow(opts = {}) {
         if (remote.syncedBy) lastSyncBy = remote.syncedBy;
       }
     }
-    await gistPush();
+    await binPush();
     lastSyncAt = new Date();
     lastSyncError = null;
-    updateGistStatus('ok');
+    updateSyncStatus('ok');
     if (opts.toast) toast('Synced.');
   } catch (e) {
     console.error('Sync failed:', e);
     lastSyncError = e.message || 'unknown';
-    updateGistStatus('error');
+    updateSyncStatus('error');
     if (opts.toast) toast('Sync failed: ' + lastSyncError);
   } finally {
     syncing = false;
@@ -820,18 +812,18 @@ function scheduleSync() {
   syncDebounce = setTimeout(() => syncNow(), 1500);
 }
 
-function updateGistStatus(state) {
-  const el = document.getElementById('gistStatus');
+function updateSyncStatus(s) {
+  const el = document.getElementById('binStatus');
   if (!el) return;
-  if (state === 'syncing') { el.textContent = '↻ syncing…'; el.style.color = 'var(--amber)'; }
-  else if (state === 'ok') {
+  if (s === 'syncing') { el.textContent = '↻ syncing…'; el.style.color = 'var(--amber)'; }
+  else if (s === 'ok') {
     const ago = lastSyncAt ? humanAgo(lastSyncAt) : 'just now';
     const by = lastSyncBy && lastSyncBy !== state.who ? ` by ${lastSyncBy}` : '';
     el.textContent = `✓ synced ${ago}${by}`;
     el.style.color = 'var(--moss)';
   }
-  else if (state === 'error') { el.textContent = '⚠ ' + (lastSyncError || 'sync failed'); el.style.color = 'var(--berry)'; }
-  else if (state === 'idle') { el.textContent = ''; }
+  else if (s === 'error') { el.textContent = '⚠ ' + (lastSyncError || 'sync failed'); el.style.color = 'var(--berry)'; }
+  else if (s === 'idle') { el.textContent = ''; }
 }
 
 function humanAgo(date) {
@@ -1500,63 +1492,62 @@ document.getElementById('whoPill').addEventListener('click', () => { whoOverlay.
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('apiKeyInput').value = localStorage.getItem('anthropic-api-key') || '';
-  document.getElementById('gistTokenInput').value = getGistToken();
-  document.getElementById('gistIdInput').value = getGistId();
-  refreshGistButtons();
-  if (lastSyncAt) updateGistStatus('ok');
-  else if (lastSyncError) updateGistStatus('error');
-  else updateGistStatus('idle');
+  document.getElementById('binKeyInput').value = getBinKey();
+  document.getElementById('binIdInput').value = getBinId();
+  refreshSyncButtons();
+  if (lastSyncAt) updateSyncStatus('ok');
+  else if (lastSyncError) updateSyncStatus('error');
+  else updateSyncStatus('idle');
   document.getElementById('settingsModal').classList.add('show');
 });
 
-function refreshGistButtons() {
+function refreshSyncButtons() {
   const connected = syncEnabled();
-  document.getElementById('gistSyncBtn').style.display = connected ? 'inline-flex' : 'none';
-  document.getElementById('gistDisconnectBtn').style.display = connected ? 'inline-flex' : 'none';
-  document.getElementById('gistConnectBtn').textContent = connected ? 'Update credentials' : 'Connect & sync';
+  document.getElementById('binSyncBtn').style.display = connected ? 'inline-flex' : 'none';
+  document.getElementById('binDisconnectBtn').style.display = connected ? 'inline-flex' : 'none';
+  document.getElementById('binConnectBtn').textContent = connected ? 'Update credentials' : 'Connect & sync';
 }
 
-document.getElementById('gistConnectBtn').addEventListener('click', async () => {
-  const token = document.getElementById('gistTokenInput').value.trim();
-  const id = document.getElementById('gistIdInput').value.trim();
-  if (!token) { toast('Paste a GitHub token first.'); return; }
-  setGistToken(token);
-  setGistId(id);
-  const btn = document.getElementById('gistConnectBtn');
+document.getElementById('binConnectBtn').addEventListener('click', async () => {
+  const key = document.getElementById('binKeyInput').value.trim();
+  const id = document.getElementById('binIdInput').value.trim();
+  if (!key) { toast('Paste your JSONBin master key first.'); return; }
+  setBinKey(key);
+  setBinId(id);
+  const btn = document.getElementById('binConnectBtn');
   btn.disabled = true; btn.textContent = 'Connecting…';
   try {
     if (!id) {
-      // Create new gist by pushing current state
-      await gistPush();
-      const newId = getGistId();
-      document.getElementById('gistIdInput').value = newId;
-      toast('Gist created — share this ID with Megan: ' + newId);
+      // Create new bin by pushing current state
+      await binPush();
+      const newId = getBinId();
+      document.getElementById('binIdInput').value = newId;
+      alert('Bin created!\n\nShare this Bin ID with Megan: ' + newId + '\n\nShe needs the same master key + this Bin ID on her device.');
       lastSyncAt = new Date();
-      updateGistStatus('ok');
+      updateSyncStatus('ok');
     } else {
       await syncNow({ toast: true });
     }
-    refreshGistButtons();
+    refreshSyncButtons();
   } catch (e) {
     toast('Connect failed: ' + e.message);
-    setGistToken(''); // unset bad token
   } finally {
     btn.disabled = false;
-    refreshGistButtons();
+    refreshSyncButtons();
   }
 });
 
-document.getElementById('gistSyncBtn').addEventListener('click', () => syncNow({ toast: true }));
+document.getElementById('binSyncBtn').addEventListener('click', () => syncNow({ toast: true }));
 
-document.getElementById('gistDisconnectBtn').addEventListener('click', () => {
-  if (!confirm('Disconnect from Gist sync? Your data stays on this device. The Gist itself stays on GitHub — you can reconnect later by pasting the same Gist ID.')) return;
-  setGistToken('');
-  setGistId('');
-  document.getElementById('gistTokenInput').value = '';
-  document.getElementById('gistIdInput').value = '';
+document.getElementById('binDisconnectBtn').addEventListener('click', () => {
+  if (!confirm('Disconnect from cloud sync? Your data stays on this device. The bin itself stays on JSONBin — you can reconnect later by pasting the same Bin ID.')) return;
+  setBinKey('');
+  setBinId('');
+  document.getElementById('binKeyInput').value = '';
+  document.getElementById('binIdInput').value = '';
   lastSyncAt = null; lastSyncBy = null; lastSyncError = null;
-  refreshGistButtons();
-  updateGistStatus('idle');
+  refreshSyncButtons();
+  updateSyncStatus('idle');
   toast('Disconnected.');
 });
 
@@ -1570,51 +1561,46 @@ document.querySelectorAll('.key-show-btn').forEach(btn => {
   });
 });
 
-// Verify GitHub token alone (without Gist ID) by hitting /user
-document.getElementById('gistVerifyBtn').addEventListener('click', async () => {
-  const tokenRaw = document.getElementById('gistTokenInput').value;
-  const token = tokenRaw.trim();
-  if (!token) { toast('Paste a token first.'); return; }
-  // Diagnostic info
-  const len = token.length;
-  const preview = token.slice(0, 6);
-  const trail = token.slice(-3);
-  const hadWhitespace = tokenRaw.length !== token.length;
-  // Detect unexpected characters (PATs are ASCII alphanumeric + underscore)
-  const badChars = token.match(/[^A-Za-z0-9_]/g);
-  console.log(`Token diagnostic: len=${len}, preview="${preview}…${trail}", whitespace=${hadWhitespace}, badChars=${badChars}`);
-  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-    alert(`Token in field starts with "${preview}" (${len} chars). Should start with ghp_ or github_pat_.\n\nIf you see uppercase G, iOS auto-capitalized it — type the g lowercase, or paste from a notes app.\n\nIf it's something completely different (like sk-ant-...), you have the wrong key in this field.`);
-    return;
-  }
-  if (badChars) {
-    alert(`Token contains unexpected characters: ${badChars.join(', ')}\n\nThis usually means iOS smart punctuation replaced something. Try pasting the token from a notes app instead of typing.`);
+// Verify JSONBin master key alone (without Bin ID)
+document.getElementById('binVerifyBtn').addEventListener('click', async () => {
+  const keyRaw = document.getElementById('binKeyInput').value;
+  const key = keyRaw.trim();
+  if (!key) { alert('Paste your JSONBin master key first.'); return; }
+  const len = key.length;
+  const preview = key.slice(0, 8);
+  const hadWhitespace = keyRaw.length !== key.length;
+  if (!key.startsWith('$2')) {
+    alert(`Field starts with "${preview}" (${len} chars). JSONBin master keys start with "$2a$10$" or "$2b$10$". Get yours at jsonbin.io → API Keys.`);
     return;
   }
   if (hadWhitespace) {
-    alert(`Token has leading/trailing whitespace. Tap the field, select all, delete, and re-paste cleanly.`);
+    alert(`Key has leading/trailing whitespace. Clear and re-paste cleanly.`);
     return;
   }
-  const btn = document.getElementById('gistVerifyBtn');
+  const btn = document.getElementById('binVerifyBtn');
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = 'Verifying…';
   try {
-    const res = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
+    // Use a lightweight endpoint — POST a tiny test bin and immediately delete it,
+    // OR just hit the bins listing. JSONBin doesn't have a /me endpoint, so we'll
+    // just try to create a tiny bin. Actually simpler: try GET on an unrelated bin
+    // (404 means key works, just bin not found; 401 means key fails).
+    const res = await fetch('https://api.jsonbin.io/v3/b/000000000000000000000000/latest', {
+      headers: { 'X-Master-Key': key }
     });
-    if (res.ok) {
-      const u = await res.json();
-      alert(`✓ Token works — logged in as ${u.login}.\n\nNow paste the same Gist ID and tap Connect & sync.`);
-    } else if (res.status === 401) {
+    if (res.status === 401) {
       const errBody = await res.text().catch(() => '');
-      alert(`✗ GitHub rejected the token (401).\n\nField has ${len} chars starting with "${preview}".\n\nGitHub said: ${errBody.slice(0, 200)}\n\nMost likely: token is wrong, expired, or for a different account. Regenerate at github.com/settings/tokens.`);
+      alert(`✗ JSONBin rejected the key (401).\n\nField has ${len} chars starting with "${preview}".\n\nServer said: ${errBody.slice(0, 200)}\n\nGet a fresh key at jsonbin.io → API Keys.`);
+    } else if (res.status === 404 || res.ok) {
+      // 404 means the dummy bin doesn't exist (expected) but auth was accepted
+      alert(`✓ Master key works.\n\nNow leave Bin ID blank (to create new) or paste an existing one, then tap Connect & sync.`);
     } else {
       const errBody = await res.text().catch(() => '');
-      alert(`✗ ${res.status} ${res.statusText}\n${errBody.slice(0, 200)}`);
+      alert(`Unexpected response ${res.status}: ${errBody.slice(0, 200)}`);
     }
   } catch (e) {
-    alert('Network error: ' + e.message + '\n\nCheck your phone has internet, or that you opened the app over HTTPS (not HTTP).');
+    alert('Network error: ' + e.message);
   } finally {
     btn.disabled = false; btn.textContent = orig;
   }
